@@ -27,6 +27,6 @@ describe('SystemClock', () => {
     const after = Date.now();
     expect(result).toBeInstanceOf(Date);
     expect(result.getTime()).toBeGreaterThanOrEqual(before);
-    expect(result.getTime()).toBeLessThanOrEqual(after + 1000);
+    expect(result.getTime()).toBeLessThanOrEqual(after + 50);
   });
 });

@@ -18,6 +18,15 @@ describe('AppError', () => {
     expect(e.code).toBe('CONCRETE');
     expect(e.message).toBe('test message');
   });
+
+  it('name reflects the subclass name for structured logging', () => {
+    class ConcreteError extends AppError {
+      code = 'CONCRETE';
+    }
+    expect(new ConcreteError('msg').name).toBe('ConcreteError');
+    expect(new OrderNotFoundError('x').name).toBe('OrderNotFoundError');
+    expect(new InvalidStateTransitionError('A', 'B').name).toBe('InvalidStateTransitionError');
+  });
 });
 
 describe('OrderNotFoundError', () => {

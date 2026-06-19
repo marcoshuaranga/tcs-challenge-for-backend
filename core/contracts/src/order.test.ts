@@ -62,4 +62,10 @@ describe('OrderResponseSchema', () => {
     const withoutCreatedAt = { ...validResponse, createdAt: undefined };
     expect(() => OrderResponseSchema.parse(withoutCreatedAt)).toThrow(ZodError);
   });
+
+  it('datetime without UTC offset is rejected (Zod 4 requires Z suffix)', () => {
+    expect(() =>
+      OrderResponseSchema.parse({ ...validResponse, createdAt: '2024-01-01T00:00:00' }),
+    ).toThrow(ZodError);
+  });
 });
