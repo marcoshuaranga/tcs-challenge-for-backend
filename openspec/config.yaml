@@ -1,0 +1,82 @@
+schema: spec-driven
+
+context: |
+  Project: TCS technical challenge — order-processing platform (5 user stories).
+  Graded on reasoning, decision quality, AWS thinking, and commit history.
+
+  Stack: pnpm workspaces monorepo · TypeScript · Hono (HTTP edge, hono/aws-lambda on AWS) ·
+  DynamoDB via dynamodb-toolbox (single table + GSI1) · SQS + DLQ · AWS CDK (IaC) ·
+  Astro + Tailwind + DaisyUI (frontend).
+
+  Architecture: Hexagonal. Dependency direction: domain ← application ← infrastructure.
+  Apps (orders-api, orders-worker) are thin driving adapters; core libs never import apps.
+  No framework DI — manual composition root: composeOrders(env) in core/orders/src/index.ts.
+  Adapter selection by per-adapter env flags (USE_AWS_SQS, USE_AWS_DYNAMO) — only in composition root.
+
+  Layout:
+    apps/orders-api        Hono/Lambda edge
+    apps/orders-worker     SQS consumer (prod) / poll-loop (local)
+    apps/api-docs          OpenAPI via zod-to-openapi + Scalar
+    apps/web               Astro + Tailwind + DaisyUI, 3 pages, static demo JWT
+    apps/iac               AWS CDK stack
+    core/orders/src/domain          Order aggregate, value objects, state machine — pure TS
+    core/orders/src/application     OrderAppService, handlers, ports — pure TS
+    core/orders/src/infrastructure  DynamoDB repos, SQS + in-memory adapters, FakePaymentGateway
+    core/orders/src/index.ts        composeOrders(env) — wires adapters by env flags
+    core/kernel            Result/error types, id/clock ports + implementations
+    core/contracts         Zod schemas + inferred DTOs (single source of truth)
+
+  Hexagonal layer ordering (code discipline + review enforces these):
+    domain ← application ← infrastructure; kernel and contracts imported by any layer; apps import core only
+
+  Package manager: pnpm only. Never generate package-lock.json or yarn.lock.
+  Scripts: pnpm install / pnpm --filter <pkg> <script> / pnpm -r run <script> / pnpm dlx for one-off tools.
+
+  Tooling: ESLint + Prettier (pnpm dlx prettier --write . / pnpm dlx eslint .). No Biome.
+
+  Methodology: Feature-driven + spec-driven (OpenSpec). XP practices applied:
+    - TDD: test tasks precede implementation tasks in tasks.md (Red → Green → Refactor).
+    - YAGNI: each change includes only what the current feature strictly requires.
+    - Simple Design: no abstractions until 3 concrete cases exist.
+    - Walking Skeleton: each feature delivers something runnable end-to-end.
+
+  Commits: conventional commits on main (no PRs, no branches). Small, reviewable.
+    feat(domain): ... | feat(infra): ... | feat(api): ... etc.
+  Never commit .env or lockfiles other than pnpm-lock.yaml.
+
+  Key invariants (do not violate):
+    - Domain is framework-free (no Hono, AWS, DynamoDB imports in core/orders/src/domain).
+    - Ports are plain interfaces in application; adapters in infrastructure.
+    - State machine: PENDING → PROCESSING → COMPLETED | FAILED. Illegal transitions throw InvalidStateTransitionError.
+    - ProcessOrderHandler is idempotent (no-op if order not in processable state).
+    - Audit is explicit: RecordAuditEntryHandler called on every state change (no Streams, no listeners).
+    - FAILED comes from PaymentGatewayPort.authorize() returning approved=false; DLQ is infra failure.
+
+  ADRs in docs/adr/ are final — implement, don't re-litigate.
+  Feature scope: see docs/design.md §6 (user-story traceability table).
+  Active change progress: see openspec/changes/<name>/tasks.md checkboxes.
+
+rules:
+  proposal:
+    - Scope to YAGNI — only what the current feature strictly requires
+    - Keep under 1 page; motivation over implementation detail
+    - Always include a Non-Goals section
+    - New capabilities use kebab-case names that map cleanly to specs/<name>/spec.md
+
+  design:
+    - For each decision, state the alternative considered and why it was rejected
+    - Reference ADR numbers when a decision is already settled there (no re-litigation)
+    - Flag any open questions explicitly; do not leave them implicit
+
+  specs:
+    - Requirements use SHALL/MUST for normative behavior; avoid should/may
+    - Every requirement has at least one scenario in WHEN/THEN format
+    - Scenarios must use exactly 4 hashtags (####)
+    - Scenarios are written as potential test cases — specific enough to drive TDD
+
+  tasks:
+    - Test tasks MUST precede their implementation tasks (XP TDD order: RED → GREEN)
+    - Each task group follows: write test → implement → verify green → pnpm dlx eslint . + pnpm dlx prettier --check . → commit
+    - Quality gate at feature close: pnpm dlx eslint . workspace-wide, all tests green, /code-review, /opsx:archive
+    - Each task is completable in a single focused session
+    - Group by logical unit (e.g., one group per file or per spec requirement)

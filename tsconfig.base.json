@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "customConditions": ["@tcs-challenge-for-backend/source"],
+    "paths": {
+      "@tcs-challenge-for-backend/kernel": ["./core/kernel/src/index.ts"],
+      "@tcs-challenge-for-backend/contracts": ["./core/contracts/src/index.ts"],
+      "@tcs-challenge-for-backend/orders": ["./core/orders/src/index.ts"]
+    }
+  }
+}

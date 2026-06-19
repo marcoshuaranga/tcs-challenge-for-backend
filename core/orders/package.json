@@ -1,0 +1,10 @@
+{
+  "name": "@tcs-challenge-for-backend/orders",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": {
+      "@tcs-challenge-for-backend/source": "./src/index.ts"
+    }
+  }
+}

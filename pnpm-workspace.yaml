@@ -1,0 +1,7 @@
+packages:
+  - 'apps/*'
+  - 'core/contracts'
+  - 'core/kernel'
+  - 'core/orders'
+
+autoInstallPeers: true

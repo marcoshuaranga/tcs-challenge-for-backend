@@ -1,0 +1,51 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+tmp
+out-tsc
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode
+
+# IDE - Claude Code
+.claude
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Nx specific
+.nx/cache
+.nx/workspace-data
+.nx/migrate-runs
+
+# Coverage / test
+coverage/
+*.lcov
+
+# IaC (CDK)
+cdk.out/
+
+# Env & secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Logs / OS
+*.log
+.DS_Store
+
+# Lockfiles other than pnpm
+package-lock.json
+yarn.lock
