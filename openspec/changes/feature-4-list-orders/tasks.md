@@ -28,7 +28,7 @@
       (extend existing file):
       — `listOrders()` returns `ok([...orders])` when orders exist;
       — `listOrders()` returns `ok([])` when the repository is empty
-- [x] 3.2 Add `listOrders(): Promise<Result<Order[], never>>` to `OrderAppService`
+- [x] 3.2 Add `listOrders(): Promise<Result<Order[], AppError>>` to `OrderAppService`
       in `core/orders/src/application/order-app-service.ts`
 - [x] 3.3 Verify OrderAppService tests pass (green)
 - [x] 3.4 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `core/orders`
@@ -61,5 +61,5 @@
 
 - [x] 6.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
 - [x] 6.2 Run `pnpm run test` across workspace — all tests green
-- [ ] 6.3 Run `/code-review` on the full change
+- [x] 6.3 Run `/code-review` on the full change
 - [ ] 6.4 Archive this change with `/opsx:archive`

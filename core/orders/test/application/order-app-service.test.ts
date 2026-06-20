@@ -163,4 +163,38 @@ describe('OrderAppService', () => {
       expect(result.value).toEqual([]);
     }
   });
+
+  it('listOrders returns err(AppError) when the handler throws an AppError', async () => {
+    const orderRepo = new InMemoryOrderRepository();
+    const auditRepo = new InMemoryAuditRepository();
+    const publisher = new InMemoryMessagePublisher();
+    const auditHandler = new RecordAuditEntryHandler(auditRepo);
+    const createHandler = new CreateOrderHandler(idGen, clock, orderRepo, auditHandler, publisher);
+    const processHandler = new ProcessOrderHandler(
+      clock,
+      orderRepo,
+      auditHandler,
+      new FakePaymentGateway(Infinity),
+    );
+    const getOrderHandler = new GetOrderHandler(orderRepo);
+    const getOrderAuditHandler = new GetOrderAuditHandler(orderRepo, auditRepo);
+    const failingListHandler = {
+      execute: async () => {
+        throw new OrderNotFoundError('x');
+      },
+    } as unknown as ListOrdersHandler;
+    const svc = new OrderAppService(
+      createHandler,
+      processHandler,
+      orderRepo,
+      failingListHandler,
+      getOrderHandler,
+      getOrderAuditHandler,
+    );
+    const result = await svc.listOrders();
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(OrderNotFoundError);
+    }
+  });
 });
