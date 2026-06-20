@@ -30,3 +30,23 @@ describe('DynamoDB table', () => {
     });
   });
 });
+
+describe('SQS queue + DLQ', () => {
+  it('stack has exactly two SQS queues', () => {
+    template.resourceCountIs('AWS::SQS::Queue', 2);
+  });
+
+  it('main queue has RedrivePolicy with maxReceiveCount 3', () => {
+    template.hasResourceProperties('AWS::SQS::Queue', {
+      RedrivePolicy: Match.objectLike({
+        maxReceiveCount: 3,
+      }),
+    });
+  });
+
+  it('DLQ has 14-day message retention (1209600 seconds)', () => {
+    template.hasResourceProperties('AWS::SQS::Queue', {
+      MessageRetentionPeriod: 1209600,
+    });
+  });
+});

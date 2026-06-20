@@ -22,18 +22,18 @@
 
 ## 3. apps/iac — DynamoDB table construct (TDD)
 
-- [ ] 3.1 Write failing test in `apps/iac/test/tcs-challenge-stack.test.ts`
+- [x] 3.1 Write failing test in `apps/iac/test/tcs-challenge-stack.test.ts`
       using `aws-cdk-lib/assertions`:
       — stack has one `AWS::DynamoDB::Table` with `BillingMode: PAY_PER_REQUEST`;
       — table has a GSI named `GSI1`;
       — table has `DeletionPolicy: Delete` (DESTROY removal policy)
-- [ ] 3.2 Add `dynamodb.Table` resource to `TcsChallengeStack`:
+- [x] 3.2 Add `dynamodb.Table` resource to `TcsChallengeStack`:
       PAY_PER_REQUEST, PK + SK string keys, GSI1 with GSI1PK + GSI1SK string keys,
       `removalPolicy: DESTROY`; export table name as `CfnOutput`
-- [ ] 3.3 Verify CDK assertion tests pass (green)
-- [ ] 3.4 Run `pnpm --filter iac cdk synth` — template valid
-- [ ] 3.5 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
-- [ ] 3.6 Commit: `feat(iac): DynamoDB table`
+- [x] 3.3 Verify CDK assertion tests pass (green)
+- [x] 3.4 Run `pnpm --filter iac cdk synth` — template valid
+- [x] 3.5 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
+- [x] 3.6 Commit: `feat(iac): DynamoDB table`
 
 ## 4. apps/iac — SQS queue + DLQ construct (TDD)
 
