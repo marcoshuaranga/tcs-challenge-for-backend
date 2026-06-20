@@ -44,6 +44,7 @@ export class DynamoOrderRepository implements OrderRepositoryPort {
       .build(QueryCommand)
       .query({ index: 'GSI1', partition: 'ORDERS' })
       .entities(this.entity)
+      .options({ maxPages: Infinity })
       .send();
     return Items.map((item) => this.itemToOrder(item as NonNullable<OrderItem>));
   }

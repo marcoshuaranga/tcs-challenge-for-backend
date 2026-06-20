@@ -66,7 +66,9 @@ stateDiagram-v2
 ```
 
 Illegal transitions throw `InvalidStateTransitionError` → HTTP `409`. The worker is **idempotent**:
-it no-ops if the order is not in `PENDING` state (at-least-once SQS delivery safety).
+redelivered messages for an already-processed order throw `InvalidStateTransitionError`, which
+`OrderAppService` catches as `err(error)` — the lambda logs it and acks the message without
+rethrowing, so duplicate deliveries are safe (no retry storm).
 
 ### Hexagonal layering
 
@@ -374,6 +376,7 @@ All errors follow `{ "error": { "code": "...", "message": "..." } }`.
 | Document | Content |
 |----------|---------|
 | [`docs/design.md`](./docs/design.md) | Full narrative design: layers, handlers, DynamoDB model, AWS scenario, scalability |
+| [`docs/aws-infra.md`](./docs/aws-infra.md) | AWS infrastructure diagram: topology, IAM grants, sequence flows, DynamoDB key schema, CFN outputs |
 | [`docs/c4.md`](./docs/c4.md) | C4 model — context, container, component diagrams |
 | [`docs/adr/`](./docs/adr/README.md) | 16 Architecture Decision Records with options and trade-offs |
 | [`openspec/changes/`](./openspec/changes/) | Feature change log: proposal → design → specs → tasks (archived per feature) |

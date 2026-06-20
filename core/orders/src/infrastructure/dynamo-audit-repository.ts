@@ -29,6 +29,7 @@ export class DynamoAuditRepository implements AuditRepositoryPort {
       .build(QueryCommand)
       .query({ partition: `ORDER#${orderId}`, range: { beginsWith: 'AUDIT#' } })
       .entities(this.entity)
+      .options({ maxPages: Infinity })
       .send();
 
     return Items.map((item) => ({
