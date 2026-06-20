@@ -31,3 +31,5 @@ export function composeOrders(env: Env): OrderAppService {
 }
 
 export { OrderAppService } from './application/order-app-service';
+export { InvalidMoneyError } from './domain/errors';
+export { InvalidStateTransitionError } from '@tcs-challenge-for-backend/kernel';

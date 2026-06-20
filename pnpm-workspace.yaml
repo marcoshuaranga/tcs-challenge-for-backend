@@ -4,4 +4,7 @@ packages:
   - 'core/kernel'
   - 'core/orders'
 
+onlyBuiltDependencies:
+  - esbuild
+
 autoInstallPeers: true
