@@ -30,6 +30,7 @@ export function makeApp(env: AppEnv) {
     '/orders',
     sValidator('json', CreateOrderSchema, (result, c) => {
       if (!result.success) return c.json({ error: 'Validation failed' }, 422);
+      return undefined;
     }),
     async (c) => {
       const dto = c.req.valid('json');

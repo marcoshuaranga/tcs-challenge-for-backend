@@ -37,7 +37,7 @@ describe('POST /orders', () => {
       body: JSON.stringify({ customerId: 'C1', amount: 50, currency: 'USD' }),
     });
     expect(res.status).toBe(201);
-    const body = await res.json();
+    const body = (await res.json()) as { id: string; status: string };
     expect(typeof body.id).toBe('string');
     expect(body.status).toBe('PENDING');
   });
