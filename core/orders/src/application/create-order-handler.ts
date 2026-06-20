@@ -27,7 +27,7 @@ export class CreateOrderHandler {
       event: 'ORDER_CREATED',
       previousState: null,
       newState: 'PENDING',
-      timestamp: this.clock.now(),
+      timestamp: order.createdAt,
     });
 
     await this.publisher.publishProcessOrder(id.value);

@@ -17,11 +17,15 @@ describe('composeOrders', () => {
     }
   });
 
-  it('throws if USE_AWS_DYNAMO is set', () => {
+  it('throws if USE_AWS_DYNAMO is set to "true"', () => {
     expect(() => composeOrders({ USE_AWS_DYNAMO: 'true' })).toThrow('not implemented');
   });
 
-  it('throws if USE_AWS_SQS is set', () => {
+  it('does not throw if USE_AWS_DYNAMO is "false" (the .env.example default)', () => {
+    expect(() => composeOrders({ USE_AWS_DYNAMO: 'false' })).not.toThrow();
+  });
+
+  it('throws if USE_AWS_SQS is set to "true"', () => {
     expect(() => composeOrders({ USE_AWS_SQS: 'true' })).toThrow('not implemented');
   });
 });

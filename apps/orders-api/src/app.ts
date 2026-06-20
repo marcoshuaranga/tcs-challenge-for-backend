@@ -24,7 +24,7 @@ export function makeApp(env: AppEnv) {
 
   app.get('/health', (c) => c.json({ status: 'ok' }));
 
-  app.use('/orders', jwtAuth(env.JWT_SECRET));
+  app.use('/orders/*', jwtAuth(env.JWT_SECRET));
 
   app.post(
     '/orders',

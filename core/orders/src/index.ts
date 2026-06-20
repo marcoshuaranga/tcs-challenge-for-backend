@@ -12,8 +12,10 @@ export type Env = {
 };
 
 export function composeOrders(env: Env): OrderAppService {
-  if (env.USE_AWS_DYNAMO) throw new Error('not implemented');
-  if (env.USE_AWS_SQS) throw new Error('not implemented');
+  if (env.USE_AWS_DYNAMO === 'true' || env.USE_AWS_DYNAMO === '1')
+    throw new Error('not implemented');
+  if (env.USE_AWS_SQS === 'true' || env.USE_AWS_SQS === '1')
+    throw new Error('not implemented');
 
   const orderRepo = new InMemoryOrderRepository();
   const auditRepo = new InMemoryAuditRepository();

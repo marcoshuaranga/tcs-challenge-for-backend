@@ -1,5 +1,5 @@
-import { ok, err } from '@tcs-challenge-for-backend/kernel';
-import type { Result, AppError } from '@tcs-challenge-for-backend/kernel';
+import { ok, err, AppError } from '@tcs-challenge-for-backend/kernel';
+import type { Result } from '@tcs-challenge-for-backend/kernel';
 import type { CreateOrderDto } from '@tcs-challenge-for-backend/contracts';
 import type { CreateOrderHandler } from './create-order-handler';
 
@@ -11,8 +11,8 @@ export class OrderAppService {
       const orderId = await this.createOrderHandler.execute(dto);
       return ok(orderId);
     } catch (e) {
-      if (e instanceof Error && 'code' in e) {
-        return err(e as AppError);
+      if (e instanceof AppError) {
+        return err(e);
       }
       throw e;
     }
