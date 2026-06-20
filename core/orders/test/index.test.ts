@@ -27,16 +27,25 @@ describe('composeOrders', () => {
     }
   });
 
-  it('throws if USE_AWS_DYNAMO is set to "true"', () => {
-    expect(() => composeOrders({ USE_AWS_DYNAMO: 'true' })).toThrow('not implemented');
+  it('wires DynamoOrderRepository when USE_AWS_DYNAMO=true', () => {
+    expect(() =>
+      composeOrders({ USE_AWS_DYNAMO: 'true', ORDERS_TABLE: 't', AWS_REGION: 'us-east-1' }),
+    ).not.toThrow();
   });
 
   it('does not throw if USE_AWS_DYNAMO is "false" (the .env.example default)', () => {
     expect(() => composeOrders({ USE_AWS_DYNAMO: 'false' })).not.toThrow();
   });
 
-  it('throws if USE_AWS_SQS is set to "true"', () => {
-    expect(() => composeOrders({ USE_AWS_SQS: 'true' })).toThrow('not implemented');
+  it('wires SqsMessagePublisher when USE_AWS_SQS=true', () => {
+    expect(() =>
+      composeOrders({ USE_AWS_SQS: 'true', QUEUE_URL: 'https://sqs/q', AWS_REGION: 'us-east-1' }),
+    ).not.toThrow();
+  });
+
+  it('composeOrders({}) still wires in-memory adapters (no regression)', () => {
+    const svc = composeOrders({});
+    expect(svc).toBeInstanceOf(OrderAppService);
   });
 
   it('getOrder returns err(OrderNotFoundError) for unknown id', async () => {
