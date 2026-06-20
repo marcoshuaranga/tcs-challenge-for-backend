@@ -5,6 +5,7 @@ import {
   composeOrders,
   InvalidMoneyError,
   InvalidStateTransitionError,
+  OrderNotFoundError,
 } from '@tcs-challenge-for-backend/orders';
 import { jwtAuth } from './middleware/auth';
 
@@ -12,12 +13,14 @@ type AppEnv = {
   JWT_SECRET: string;
   USE_AWS_DYNAMO?: string;
   USE_AWS_SQS?: string;
+  FAIL_ABOVE_AMOUNT?: string;
 };
 
 export function makeApp(env: AppEnv) {
   const orderService = composeOrders({
     USE_AWS_DYNAMO: env.USE_AWS_DYNAMO,
     USE_AWS_SQS: env.USE_AWS_SQS,
+    FAIL_ABOVE_AMOUNT: env.FAIL_ABOVE_AMOUNT,
   });
 
   const app = new Hono();
@@ -48,6 +51,22 @@ export function makeApp(env: AppEnv) {
       return c.json({ error: 'Internal error' }, 500);
     },
   );
+
+  app.post('/orders/:id/process', async (c) => {
+    const id = c.req.param('id');
+    const result = await orderService.processOrder(id);
+    if (result.ok) {
+      return c.json({ id, status: 'PENDING' }, 202);
+    }
+    const error = result.error;
+    if (error instanceof OrderNotFoundError) {
+      return c.json({ error: { code: error.code, message: error.message } }, 404);
+    }
+    if (error instanceof InvalidStateTransitionError) {
+      return c.json({ error: { code: error.code, message: error.message } }, 409);
+    }
+    return c.json({ error: 'Internal error' }, 500);
+  });
 
   return app;
 }

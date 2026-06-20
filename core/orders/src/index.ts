@@ -41,9 +41,9 @@ export function composeOrders(env: Env): OrderAppService {
     new FakePaymentGateway(failAboveAmount),
   );
 
-  return new OrderAppService(createHandler, processHandler);
+  return new OrderAppService(createHandler, processHandler, orderRepo);
 }
 
 export { OrderAppService } from './application/order-app-service';
 export { InvalidMoneyError } from './domain/errors';
-export { InvalidStateTransitionError } from '@tcs-challenge-for-backend/kernel';
+export { InvalidStateTransitionError, OrderNotFoundError } from '@tcs-challenge-for-backend/kernel';

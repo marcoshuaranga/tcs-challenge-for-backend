@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { UuidGenerator, SystemClock, OrderNotFoundError } from '@tcs-challenge-for-backend/kernel';
+import {
+  UuidGenerator,
+  SystemClock,
+  OrderNotFoundError,
+  InvalidStateTransitionError,
+} from '@tcs-challenge-for-backend/kernel';
 import { OrderAppService } from '../../src/application/order-app-service';
 import { CreateOrderHandler } from '../../src/application/create-order-handler';
 import { ProcessOrderHandler } from '../../src/application/process-order-handler';
@@ -25,7 +30,7 @@ function makeService() {
     auditHandler,
     new FakePaymentGateway(Infinity),
   );
-  return new OrderAppService(createHandler, processHandler);
+  return new OrderAppService(createHandler, processHandler, orderRepo);
 }
 
 describe('OrderAppService', () => {
@@ -67,6 +72,21 @@ describe('OrderAppService', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toBeInstanceOf(OrderNotFoundError);
+    }
+  });
+
+  it('processOrder returns err(InvalidStateTransitionError) for non-PENDING order', async () => {
+    const svc = makeService();
+    const registered = await svc.registerOrder({ customerId: 'C1', amount: 50, currency: 'USD' });
+    expect(registered.ok).toBe(true);
+    if (!registered.ok) return;
+    // Process once to move it out of PENDING
+    await svc.processOrder(registered.value);
+    // Second call should fail since order is now COMPLETED
+    const result = await svc.processOrder(registered.value);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(InvalidStateTransitionError);
     }
   });
 });

@@ -84,17 +84,17 @@
 
 ## 10. apps/orders-api — POST /orders/:id/process route (TDD)
 
-- [ ] 10.1 Write failing tests in `apps/orders-api/test/routes.test.ts` (extend existing file):
+- [x] 10.1 Write failing tests in `apps/orders-api/test/routes.test.ts` (extend existing file):
        — `POST /orders/:id/process` without JWT → 401;
        — `POST /orders/:id/process` with valid JWT and unknown id → 404 with error envelope;
        — `POST /orders/:id/process` with valid JWT and non-PENDING order → 409 with error envelope;
        — `POST /orders/:id/process` with valid JWT and PENDING order → 202 with `{ id, status }`
-- [ ] 10.2 Implement `POST /orders/:id/process` route in `apps/orders-api/src/app.ts`:
+- [x] 10.2 Implement `POST /orders/:id/process` route in `apps/orders-api/src/app.ts`:
        call `appService.processOrder(id)`, map `ok` → 202 with `{ id, status: 'PENDING' }`,
        map `err(OrderNotFoundError)` → 404, map `err(InvalidStateTransitionError)` → 409
-- [ ] 10.3 Verify all route tests pass (green)
-- [ ] 10.4 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/orders-api`
-- [ ] 10.5 Commit: `feat(api): POST /orders/:id/process`
+- [x] 10.3 Verify all route tests pass (green)
+- [x] 10.4 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/orders-api`
+- [x] 10.5 Commit: `feat(api): POST /orders/:id/process`
 
 ## 11. apps/orders-worker — package setup
 
