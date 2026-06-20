@@ -22,8 +22,9 @@ export const OrderResponseSchema = z
     customerId: z.string().min(1),
     amount: z.number().positive(),
     currency: z.string().regex(/^[A-Z]{3}$/),
-    createdAt: z.string().datetime(),
-    updatedAt: z.string().datetime(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+    failureReason: z.string().optional(),
   })
   .openapi('OrderResponse');
 
@@ -35,3 +36,9 @@ export const ErrorEnvelopeSchema = z
     message: z.string(),
   })
   .openapi('ErrorEnvelope');
+
+export const ProcessOrderMessageSchema = z.object({
+  orderId: z.string().min(1),
+});
+
+export type ProcessOrderMessage = z.infer<typeof ProcessOrderMessageSchema>;

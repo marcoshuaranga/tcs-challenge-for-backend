@@ -8,7 +8,7 @@ import {
   OrderResponseSchema,
 } from '@tcs-challenge-for-backend/contracts';
 
-export function buildApp(apiUrl = 'http://localhost:3000'): Hono {
+export function makeDocsApp(apiUrl = 'http://localhost:3000'): Hono {
   const registry = new OpenAPIRegistry();
 
   registry.register('CreateOrder', CreateOrderSchema);
@@ -170,7 +170,9 @@ export function buildApp(apiUrl = 'http://localhost:3000'): Hono {
 
   app.get('/openapi.json', (c) => c.json(document));
 
-  app.get('/', Scalar({ spec: { url: '/openapi.json' } }));
+  const scalarHandler = Scalar({ spec: { url: '/openapi.json' } });
+  app.get('/', scalarHandler);
+  app.get('/docs', scalarHandler);
 
   return app;
 }

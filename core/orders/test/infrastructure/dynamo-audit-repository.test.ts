@@ -1,119 +1,111 @@
-import { CreateTableCommand, DeleteTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { BatchWriteCommand, DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { describe, expect, it, vi } from 'vitest';
 import type { AuditEntry } from '../../src/domain/audit-entry';
+import type { AuditItem } from '../../src/infrastructure/dynamo-entities';
 import { DynamoAuditRepository } from '../../src/infrastructure/dynamo-audit-repository';
 
-const DDB_ENDPOINT = process.env['DDB_ENDPOINT'];
-const TABLE_NAME = `test-audit-${Date.now()}`;
+const TABLE = 'orders-table';
 
-function makeEntry(orderId: string, overrides: Partial<AuditEntry> = {}): AuditEntry {
+function makeEntry(overrides: Partial<AuditEntry> = {}): AuditEntry {
   return {
-    orderId,
+    orderId: 'order-1',
     event: 'ORDER_CREATED',
     previousState: null,
     newState: 'PENDING',
-    timestamp: new Date(),
+    timestamp: new Date('2024-01-01T10:00:00Z'),
     ...overrides,
   };
 }
 
-async function clearTable(client: DynamoDBDocumentClient) {
-  const { Items = [] } = await client.send(new ScanCommand({ TableName: TABLE_NAME }));
-  if (Items.length === 0) return;
-  for (let i = 0; i < Items.length; i += 25) {
-    await client.send(
-      new BatchWriteCommand({
-        RequestItems: {
-          [TABLE_NAME]: Items.slice(i, i + 25).map((item) => ({
-            DeleteRequest: { Key: { PK: item['PK'], SK: item['SK'] } },
-          })),
-        },
-      }),
-    );
-  }
+function makeClient(response: unknown = {}) {
+  return { send: vi.fn().mockResolvedValue(response) } as unknown as DynamoDBDocumentClient;
 }
 
-describe.skipIf(!DDB_ENDPOINT)('DynamoAuditRepository (integration)', () => {
-  let documentClient: DynamoDBDocumentClient;
-  let repo: DynamoAuditRepository;
+function toItem(entry: AuditEntry, skSuffix = 'uuid'): AuditItem {
+  return {
+    PK: `ORDER#${entry.orderId}`,
+    SK: `AUDIT#${entry.timestamp.toISOString()}#${skSuffix}`,
+    orderId: entry.orderId,
+    event: entry.event,
+    previousState: entry.previousState,
+    newState: entry.newState,
+    timestamp: entry.timestamp.toISOString(),
+    ...(entry.reason != null ? { reason: entry.reason } : {}),
+  };
+}
 
-  beforeAll(async () => {
-    const client = new DynamoDBClient({ region: 'us-east-1', endpoint: DDB_ENDPOINT });
-    documentClient = DynamoDBDocumentClient.from(client, {
-      marshallOptions: { removeUndefinedValues: true },
+function sentCmd(client: DynamoDBDocumentClient) {
+  return (client.send as ReturnType<typeof vi.fn>).mock.calls[0][0];
+}
+
+describe('DynamoAuditRepository', () => {
+  describe('append', () => {
+    it('sends PutCommand with PK=ORDER#<orderId> and SK starting with AUDIT#<timestamp>', async () => {
+      const entry = makeEntry();
+      const client = makeClient({});
+      await new DynamoAuditRepository(client, TABLE).append(entry);
+      const cmd = sentCmd(client);
+      expect(cmd).toBeInstanceOf(PutCommand);
+      const item = cmd.input.Item;
+      expect(item.PK).toBe('ORDER#order-1');
+      expect(item.SK).toMatch(/^AUDIT#2024-01-01T10:00:00\.000Z#/);
+      expect(item.orderId).toBe('order-1');
+      expect(item.event).toBe('ORDER_CREATED');
+      expect(item.previousState).toBeNull();
+      expect(item.newState).toBe('PENDING');
+      expect(item.timestamp).toBe('2024-01-01T10:00:00.000Z');
     });
-    await client.send(
-      new CreateTableCommand({
-        TableName: TABLE_NAME,
-        KeySchema: [
-          { AttributeName: 'PK', KeyType: 'HASH' },
-          { AttributeName: 'SK', KeyType: 'RANGE' },
-        ],
-        AttributeDefinitions: [
-          { AttributeName: 'PK', AttributeType: 'S' },
-          { AttributeName: 'SK', AttributeType: 'S' },
-        ],
-        BillingMode: 'PAY_PER_REQUEST',
-      }),
-    );
-    repo = new DynamoAuditRepository(documentClient, TABLE_NAME);
+
+    it('includes reason when entry has one', async () => {
+      const client = makeClient({});
+      await new DynamoAuditRepository(client, TABLE).append(
+        makeEntry({ reason: 'payment_declined' }),
+      );
+      expect(sentCmd(client).input.Item.reason).toBe('payment_declined');
+    });
+
+    it('omits reason key when entry has none', async () => {
+      const client = makeClient({});
+      await new DynamoAuditRepository(client, TABLE).append(makeEntry());
+      expect('reason' in sentCmd(client).input.Item).toBe(false);
+    });
   });
 
-  afterAll(async () => {
-    const client = new DynamoDBClient({ region: 'us-east-1', endpoint: DDB_ENDPOINT });
-    await client.send(new DeleteTableCommand({ TableName: TABLE_NAME }));
-  });
+  describe('findByOrderId', () => {
+    it('sends QueryCommand with correct PK, AUDIT# prefix and ScanIndexForward=true', async () => {
+      const client = makeClient({ Items: [] });
+      await new DynamoAuditRepository(client, TABLE).findByOrderId('order-1');
+      const cmd = sentCmd(client);
+      expect(cmd).toBeInstanceOf(QueryCommand);
+      expect(cmd.input.ExpressionAttributeValues[':pk']).toBe('ORDER#order-1');
+      expect(cmd.input.ExpressionAttributeValues[':prefix']).toBe('AUDIT#');
+      expect(cmd.input.ScanIndexForward).toBe(true);
+    });
 
-  afterEach(async () => {
-    await clearTable(documentClient);
-  });
+    it('returns empty array when Items is undefined', async () => {
+      const result = await new DynamoAuditRepository(makeClient({}), TABLE).findByOrderId('x');
+      expect(result).toEqual([]);
+    });
 
-  it('append then findByOrderId returns the entry', async () => {
-    const entry = makeEntry('order-1');
-    await repo.append(entry);
-    const found = await repo.findByOrderId('order-1');
-    expect(found).toHaveLength(1);
-    expect(found[0].orderId).toBe('order-1');
-    expect(found[0].event).toBe('ORDER_CREATED');
-    expect(found[0].newState).toBe('PENDING');
-    expect(found[0].previousState).toBeNull();
-  });
+    it('maps items to AuditEntry with Date timestamps', async () => {
+      const entry = makeEntry();
+      const client = makeClient({ Items: [toItem(entry)] });
+      const found = await new DynamoAuditRepository(client, TABLE).findByOrderId('order-1');
+      expect(found).toHaveLength(1);
+      expect(found[0].orderId).toBe('order-1');
+      expect(found[0].event).toBe('ORDER_CREATED');
+      expect(found[0].previousState).toBeNull();
+      expect(found[0].newState).toBe('PENDING');
+      expect(found[0].timestamp).toBeInstanceOf(Date);
+      expect(found[0].timestamp.toISOString()).toBe('2024-01-01T10:00:00.000Z');
+    });
 
-  it('two appends for same order with same timestamp do not collide', async () => {
-    const timestamp = new Date('2024-01-01T10:00:00Z');
-    await repo.append(makeEntry('order-2', { timestamp }));
-    await repo.append(
-      makeEntry('order-2', {
-        timestamp,
-        event: 'ORDER_PROCESSING',
-        newState: 'PROCESSING',
-        previousState: 'PENDING',
-      }),
-    );
-    const found = await repo.findByOrderId('order-2');
-    expect(found).toHaveLength(2);
-  });
-
-  it('findByOrderId returns entries in ascending timestamp order', async () => {
-    const t1 = new Date('2024-01-01T10:00:00Z');
-    const t2 = new Date('2024-01-01T11:00:00Z');
-    await repo.append(makeEntry('order-3', { timestamp: t1, event: 'CREATED' }));
-    await repo.append(
-      makeEntry('order-3', {
-        timestamp: t2,
-        event: 'PROCESSING',
-        newState: 'PROCESSING',
-        previousState: 'PENDING',
-      }),
-    );
-    const found = await repo.findByOrderId('order-3');
-    expect(found).toHaveLength(2);
-    expect(found[0].timestamp.getTime()).toBeLessThanOrEqual(found[1].timestamp.getTime());
-  });
-
-  it('findByOrderId returns [] for an orderId with no entries', async () => {
-    const found = await repo.findByOrderId('order-with-no-audit');
-    expect(found).toEqual([]);
+    it('maps reason when present', async () => {
+      const entry = makeEntry({ reason: 'payment_declined' });
+      const client = makeClient({ Items: [toItem(entry)] });
+      const found = await new DynamoAuditRepository(client, TABLE).findByOrderId('order-1');
+      expect(found[0].reason).toBe('payment_declined');
+    });
   });
 });

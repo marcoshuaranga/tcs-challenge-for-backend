@@ -226,7 +226,7 @@ describe('POST /orders/:id/process', () => {
     expect(body.error.code).toBe('INVALID_STATE_TRANSITION');
   });
 
-  it('with valid JWT and PENDING order returns 202 with { id, status }', async () => {
+  it('with valid JWT and PENDING order returns 202 with actual post-processing status', async () => {
     const app = makeApp({ JWT_SECRET: TEST_SECRET });
     const token = await makeToken();
     const id = await createPendingOrder(app, token);
@@ -237,6 +237,30 @@ describe('POST /orders/:id/process', () => {
     expect(res.status).toBe(202);
     const body = (await res.json()) as { id: string; status: string };
     expect(body.id).toBe(id);
-    expect(body.status).toBe('PENDING');
+    // In-memory path runs synchronously; payment always succeeds with default FAIL_ABOVE_AMOUNT
+    expect(body.status).toBe('COMPLETED');
+  });
+
+  it('FAILED order exposes failureReason in GET /orders/:id response', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET, FAIL_ABOVE_AMOUNT: '10' });
+    const token = await makeToken();
+    // amount=50 > FAIL_ABOVE_AMOUNT=10 → payment declines → FAILED
+    const res = await app.request('/orders', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerId: 'C1', amount: 50, currency: 'USD' }),
+    });
+    const created = (await res.json()) as { id: string };
+    await app.request(`/orders/${created.id}/process`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const getRes = await app.request(`/orders/${created.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(getRes.status).toBe(200);
+    const order = (await getRes.json()) as { status: string; failureReason?: string };
+    expect(order.status).toBe('FAILED');
+    expect(typeof order.failureReason).toBe('string');
   });
 });

@@ -5,7 +5,8 @@ import * as cdk from 'aws-cdk-lib';
 import { TcsChallengeStack } from '../lib/tcs-challenge-stack';
 
 const envFile = path.resolve(__dirname, '../../../.env.deploy');
-dotenv.config({ path: envFile });
+const { error } = dotenv.config({ path: envFile });
+if (error) throw new Error(`.env.deploy not found at ${envFile} — create it from .env.example`);
 
 const app = new cdk.App();
 new TcsChallengeStack(app, 'TcsChallengeStack', {

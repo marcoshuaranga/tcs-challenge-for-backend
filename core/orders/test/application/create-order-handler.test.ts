@@ -23,36 +23,37 @@ function makeHandler() {
 }
 
 describe('CreateOrderHandler', () => {
-  it('returns a non-empty orderId string', async () => {
+  it('returns a created Order with a non-empty id', async () => {
     const { handler } = makeHandler();
-    const orderId = await handler.execute({ customerId: 'C1', amount: 100, currency: 'USD' });
-    expect(typeof orderId).toBe('string');
-    expect(orderId.length).toBeGreaterThan(0);
+    const order = await handler.execute({ customerId: 'C1', amount: 100, currency: 'USD' });
+    expect(typeof order.id).toBe('string');
+    expect(order.id.length).toBeGreaterThan(0);
+    expect(order.status).toBe('PENDING');
   });
 
   it('order is saved in repository after execute', async () => {
     const { handler, orderRepo } = makeHandler();
-    const orderId = await handler.execute({ customerId: 'C1', amount: 100, currency: 'USD' });
-    const saved = await orderRepo.findById(orderId);
+    const order = await handler.execute({ customerId: 'C1', amount: 100, currency: 'USD' });
+    const saved = await orderRepo.findById(order.id);
     expect(saved).not.toBeNull();
-    expect(saved?.id).toBe(orderId);
+    expect(saved?.id).toBe(order.id);
   });
 
   it('audit entry with ORDER_CREATED is recorded', async () => {
     const { handler, auditRepo } = makeHandler();
-    const orderId = await handler.execute({ customerId: 'C1', amount: 100, currency: 'USD' });
+    const order = await handler.execute({ customerId: 'C1', amount: 100, currency: 'USD' });
     expect(auditRepo.entries).toHaveLength(1);
     expect(auditRepo.entries[0]?.event).toBe('ORDER_CREATED');
-    expect(auditRepo.entries[0]?.orderId).toBe(orderId);
+    expect(auditRepo.entries[0]?.orderId).toBe(order.id);
     expect(auditRepo.entries[0]?.previousState).toBeNull();
     expect(auditRepo.entries[0]?.newState).toBe('PENDING');
   });
 
   it('publishProcessOrder called once with the new orderId', async () => {
     const { handler, publisher } = makeHandler();
-    const orderId = await handler.execute({ customerId: 'C1', amount: 100, currency: 'USD' });
+    const order = await handler.execute({ customerId: 'C1', amount: 100, currency: 'USD' });
     expect(publisher.published).toHaveLength(1);
-    expect(publisher.published[0]).toBe(orderId);
+    expect(publisher.published[0]).toBe(order.id);
   });
 
   it('invalid money (amount=0) throws InvalidMoneyError before any save', async () => {

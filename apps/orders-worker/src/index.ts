@@ -14,7 +14,7 @@ const envConfig = {
   QUEUE_URL: env['QUEUE_URL'],
 };
 
-const useSqs = env['USE_AWS_SQS'] === 'true' || env['USE_AWS_SQS'] === '1';
+const useSqs = envConfig.USE_AWS_SQS === 'true' || envConfig.USE_AWS_SQS === '1';
 
 let stop: () => void;
 if (useSqs) {

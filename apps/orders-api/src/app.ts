@@ -6,6 +6,7 @@ import {
   InvalidMoneyError,
   InvalidStateTransitionError,
   OrderNotFoundError,
+  type Order,
 } from '@tcs-challenge-for-backend/orders';
 import { jwtAuth } from './middleware/auth';
 
@@ -19,6 +20,19 @@ type AppEnv = {
   DDB_ENDPOINT?: string;
   QUEUE_URL?: string;
 };
+
+function serializeOrder(order: Order) {
+  return {
+    id: order.id,
+    status: order.status,
+    customerId: order.customerId,
+    amount: order.money.amount,
+    currency: order.money.currency,
+    createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
+    ...(order.failureReason !== undefined && { failureReason: order.failureReason }),
+  };
+}
 
 export function makeApp(env: AppEnv) {
   const orderService = composeOrders({
@@ -47,14 +61,11 @@ export function makeApp(env: AppEnv) {
       const dto = c.req.valid('json');
       const result = await orderService.registerOrder(dto);
       if (result.ok) {
-        return c.json({ id: result.value, status: 'PENDING' }, 201);
+        return c.json(serializeOrder(result.value), 201);
       }
       const error = result.error;
       if (error instanceof InvalidMoneyError) {
-        return c.json({ error: error.message }, 422);
-      }
-      if (error instanceof InvalidStateTransitionError) {
-        return c.json({ error: error.message }, 409);
+        return c.json({ error: { code: error.code, message: error.message } }, 422);
       }
       return c.json({ error: 'Internal error' }, 500);
     },
@@ -63,17 +74,7 @@ export function makeApp(env: AppEnv) {
   app.get('/orders', async (c) => {
     const result = await orderService.listOrders();
     if (!result.ok) return c.json({ error: 'Internal error' }, 500);
-    return c.json(
-      result.value.map((order) => ({
-        id: order.id,
-        status: order.status,
-        customerId: order.customerId,
-        amount: order.money.amount,
-        currency: order.money.currency,
-        createdAt: order.createdAt.toISOString(),
-        updatedAt: order.updatedAt.toISOString(),
-      })),
-    );
+    return c.json(result.value.map(serializeOrder));
   });
 
   app.get('/orders/:id/audit', async (c) => {
@@ -93,16 +94,7 @@ export function makeApp(env: AppEnv) {
     const id = c.req.param('id');
     const result = await orderService.getOrder(id);
     if (result.ok) {
-      const order = result.value;
-      return c.json({
-        id: order.id,
-        status: order.status,
-        customerId: order.customerId,
-        amount: order.money.amount,
-        currency: order.money.currency,
-        createdAt: order.createdAt.toISOString(),
-        updatedAt: order.updatedAt.toISOString(),
-      });
+      return c.json(serializeOrder(result.value));
     }
     const error = result.error;
     if (error instanceof OrderNotFoundError) {
@@ -115,7 +107,9 @@ export function makeApp(env: AppEnv) {
     const id = c.req.param('id');
     const result = await orderService.processOrder(id);
     if (result.ok) {
-      return c.json({ id, status: 'PENDING' }, 202);
+      const fetched = await orderService.getOrder(id);
+      const status = fetched.ok ? fetched.value.status : 'PROCESSING';
+      return c.json({ id, status }, 202);
     }
     const error = result.error;
     if (error instanceof OrderNotFoundError) {

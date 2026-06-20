@@ -26,10 +26,10 @@ export class OrderAppService {
     private readonly getOrderAuditHandler: GetOrderAuditHandler,
   ) {}
 
-  async registerOrder(dto: CreateOrderDto): Promise<Result<string, AppError>> {
+  async registerOrder(dto: CreateOrderDto): Promise<Result<Order, AppError>> {
     try {
-      const orderId = await this.createOrderHandler.execute(dto);
-      return ok(orderId);
+      const order = await this.createOrderHandler.execute(dto);
+      return ok(order);
     } catch (e) {
       if (e instanceof AppError) return err(e);
       throw e;

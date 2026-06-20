@@ -15,7 +15,7 @@ export class CreateOrderHandler {
     private readonly publisher: MessagePublisherPort,
   ) {}
 
-  async execute(dto: CreateOrderDto): Promise<string> {
+  async execute(dto: CreateOrderDto): Promise<Order> {
     const id = OrderId.generate(this.idGen);
     const money = Money.create(dto.amount, dto.currency);
     const order = Order.create({ id, customerId: dto.customerId, money, clock: this.clock });
@@ -32,6 +32,6 @@ export class CreateOrderHandler {
 
     await this.publisher.publishProcessOrder(id.value);
 
-    return id.value;
+    return order;
   }
 }

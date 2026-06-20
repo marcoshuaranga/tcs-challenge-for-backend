@@ -3,7 +3,8 @@ import {
   ReceiveMessageCommand,
   SQSClient,
 } from '@aws-sdk/client-sqs';
-import type { OrderAppService } from '@tcs-challenge-for-backend/orders';
+import { ProcessOrderMessageSchema } from '@tcs-challenge-for-backend/contracts';
+import { InvalidStateTransitionError, type OrderAppService } from '@tcs-challenge-for-backend/orders';
 
 export function startSqsConsumer(
   client: SQSClient,
@@ -24,11 +25,19 @@ export function startSqsConsumer(
       );
       for (const msg of result.Messages ?? []) {
         try {
-          const { orderId } = JSON.parse(msg.Body!) as { orderId: string };
-          const processed = await appService.processOrder(orderId);
-          if (!processed.ok) {
-            console.error('[sqs-consumer] processOrder failed, leaving in queue:', processed.error);
+          const msgResult = ProcessOrderMessageSchema.safeParse(JSON.parse(msg.Body!));
+          if (!msgResult.success) {
+            console.error('[sqs-consumer] invalid message payload, leaving in queue:', msg.MessageId, msgResult.error.issues);
             continue;
+          }
+          const processed = await appService.processOrder(msgResult.data.orderId);
+          if (!processed.ok) {
+            if (processed.error instanceof InvalidStateTransitionError) {
+              // Order already processed — idempotent re-delivery, safe to delete
+            } else {
+              console.error('[sqs-consumer] processOrder failed, leaving in queue:', processed.error);
+              continue;
+            }
           }
           await client.send(
             new DeleteMessageCommand({

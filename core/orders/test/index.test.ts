@@ -9,12 +9,13 @@ describe('composeOrders', () => {
     expect(svc).toBeInstanceOf(OrderAppService);
   });
 
-  it('registerOrder returns ok(orderId) end-to-end', async () => {
+  it('registerOrder returns ok(order) end-to-end', async () => {
     const svc = composeOrders({});
     const result = await svc.registerOrder({ customerId: 'C1', amount: 100, currency: 'USD' });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(typeof result.value).toBe('string');
+      expect(typeof result.value.id).toBe('string');
+      expect(result.value.status).toBe('PENDING');
     }
   });
 

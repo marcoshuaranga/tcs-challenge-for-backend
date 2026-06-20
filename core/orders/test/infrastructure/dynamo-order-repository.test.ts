@@ -1,123 +1,142 @@
-import { CreateTableCommand, DeleteTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { BatchWriteCommand, DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { SystemClock, UuidGenerator } from '@tcs-challenge-for-backend/kernel';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Money } from '../../src/domain/money';
 import { Order } from '../../src/domain/order';
 import { OrderId } from '../../src/domain/order-id';
+import type { OrderItem } from '../../src/infrastructure/dynamo-entities';
 import { DynamoOrderRepository } from '../../src/infrastructure/dynamo-order-repository';
 
-const DDB_ENDPOINT = process.env['DDB_ENDPOINT'];
-const TABLE_NAME = `test-orders-${Date.now()}`;
+const TABLE = 'orders-table';
+const clock = new SystemClock();
 
 function makeOrder() {
   const id = OrderId.generate(new UuidGenerator());
-  const money = Money.create(100, 'USD');
-  return Order.create({ id, customerId: 'C1', money, clock: new SystemClock() });
+  return Order.create({ id, customerId: 'C1', money: Money.create(100, 'USD'), clock });
 }
 
-async function clearTable(client: DynamoDBDocumentClient) {
-  const { Items = [] } = await client.send(new ScanCommand({ TableName: TABLE_NAME }));
-  if (Items.length === 0) return;
-  for (let i = 0; i < Items.length; i += 25) {
-    await client.send(
-      new BatchWriteCommand({
-        RequestItems: {
-          [TABLE_NAME]: Items.slice(i, i + 25).map((item) => ({
-            DeleteRequest: { Key: { PK: item['PK'], SK: item['SK'] } },
-          })),
-        },
-      }),
-    );
-  }
+function makeClient(response: unknown = {}) {
+  return { send: vi.fn().mockResolvedValue(response) } as unknown as DynamoDBDocumentClient;
 }
 
-describe.skipIf(!DDB_ENDPOINT)('DynamoOrderRepository (integration)', () => {
-  let documentClient: DynamoDBDocumentClient;
-  let repo: DynamoOrderRepository;
+function toItem(order: Order): OrderItem {
+  return {
+    PK: `ORDER#${order.id}`,
+    SK: 'METADATA',
+    GSI1PK: 'ORDERS',
+    GSI1SK: `${order.createdAt.toISOString()}#${order.id}`,
+    id: order.id,
+    customerId: order.customerId,
+    amount: order.money.amount,
+    currency: order.money.currency,
+    status: order.status,
+    createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
+  };
+}
 
-  beforeAll(async () => {
-    const client = new DynamoDBClient({ region: 'us-east-1', endpoint: DDB_ENDPOINT });
-    documentClient = DynamoDBDocumentClient.from(client, {
-      marshallOptions: { removeUndefinedValues: true },
+function sentCmd(client: DynamoDBDocumentClient) {
+  return (client.send as ReturnType<typeof vi.fn>).mock.calls[0][0];
+}
+
+describe('DynamoOrderRepository', () => {
+  describe('findById', () => {
+    it('sends GetCommand with PK=ORDER#<id> and SK=METADATA', async () => {
+      const client = makeClient({});
+      await new DynamoOrderRepository(client, TABLE).findById('abc');
+      const cmd = sentCmd(client);
+      expect(cmd).toBeInstanceOf(GetCommand);
+      expect(cmd.input).toEqual({ TableName: TABLE, Key: { PK: 'ORDER#abc', SK: 'METADATA' } });
     });
-    await client.send(
-      new CreateTableCommand({
-        TableName: TABLE_NAME,
-        KeySchema: [
-          { AttributeName: 'PK', KeyType: 'HASH' },
-          { AttributeName: 'SK', KeyType: 'RANGE' },
-        ],
-        AttributeDefinitions: [
-          { AttributeName: 'PK', AttributeType: 'S' },
-          { AttributeName: 'SK', AttributeType: 'S' },
-          { AttributeName: 'GSI1PK', AttributeType: 'S' },
-          { AttributeName: 'GSI1SK', AttributeType: 'S' },
-        ],
-        GlobalSecondaryIndexes: [
-          {
-            IndexName: 'GSI1',
-            KeySchema: [
-              { AttributeName: 'GSI1PK', KeyType: 'HASH' },
-              { AttributeName: 'GSI1SK', KeyType: 'RANGE' },
-            ],
-            Projection: { ProjectionType: 'ALL' },
-          },
-        ],
-        BillingMode: 'PAY_PER_REQUEST',
-      }),
-    );
-    repo = new DynamoOrderRepository(documentClient, TABLE_NAME);
+
+    it('returns null when Item is absent', async () => {
+      const result = await new DynamoOrderRepository(makeClient({}), TABLE).findById('x');
+      expect(result).toBeNull();
+    });
+
+    it('maps Item fields to Order correctly', async () => {
+      const order = makeOrder();
+      const client = makeClient({ Item: toItem(order) });
+      const found = await new DynamoOrderRepository(client, TABLE).findById(order.id);
+      expect(found).not.toBeNull();
+      expect(found!.id).toBe(order.id);
+      expect(found!.customerId).toBe('C1');
+      expect(found!.status).toBe('PENDING');
+      expect(found!.money.amount).toBe(100);
+      expect(found!.money.currency).toBe('USD');
+      expect(found!.createdAt).toBeInstanceOf(Date);
+      expect(found!.updatedAt).toBeInstanceOf(Date);
+    });
+
+    it('maps failureReason when present', async () => {
+      const failed = makeOrder().startProcessing(clock).fail('payment_declined', clock);
+      const item = { ...toItem(failed), failureReason: 'payment_declined' };
+      const found = await new DynamoOrderRepository(makeClient({ Item: item }), TABLE).findById(
+        failed.id,
+      );
+      expect(found!.failureReason).toBe('payment_declined');
+    });
   });
 
-  afterAll(async () => {
-    const client = new DynamoDBClient({ region: 'us-east-1', endpoint: DDB_ENDPOINT });
-    await client.send(new DeleteTableCommand({ TableName: TABLE_NAME }));
+  describe('save', () => {
+    it('sends PutCommand with correctly shaped item', async () => {
+      const order = makeOrder();
+      const client = makeClient({});
+      await new DynamoOrderRepository(client, TABLE).save(order);
+      const cmd = sentCmd(client);
+      expect(cmd).toBeInstanceOf(PutCommand);
+      const item = cmd.input.Item;
+      expect(item.PK).toBe(`ORDER#${order.id}`);
+      expect(item.SK).toBe('METADATA');
+      expect(item.GSI1PK).toBe('ORDERS');
+      expect(item.GSI1SK).toBe(`${order.createdAt.toISOString()}#${order.id}`);
+      expect(item.id).toBe(order.id);
+      expect(item.customerId).toBe('C1');
+      expect(item.amount).toBe(100);
+      expect(item.currency).toBe('USD');
+      expect(item.status).toBe('PENDING');
+    });
+
+    it('omits failureReason for non-FAILED orders', async () => {
+      const client = makeClient({});
+      await new DynamoOrderRepository(client, TABLE).save(makeOrder());
+      expect(sentCmd(client).input.Item.failureReason).toBeUndefined();
+    });
+
+    it('includes failureReason when order is FAILED', async () => {
+      const failed = makeOrder().startProcessing(clock).fail('payment_declined', clock);
+      const client = makeClient({});
+      await new DynamoOrderRepository(client, TABLE).save(failed);
+      const item = sentCmd(client).input.Item;
+      expect(item.status).toBe('FAILED');
+      expect(item.failureReason).toBe('payment_declined');
+    });
   });
 
-  afterEach(async () => {
-    await clearTable(documentClient);
-  });
+  describe('listAll', () => {
+    it('sends QueryCommand on GSI1 with ORDERS partition key', async () => {
+      const client = makeClient({ Items: [] });
+      await new DynamoOrderRepository(client, TABLE).listAll();
+      const cmd = sentCmd(client);
+      expect(cmd).toBeInstanceOf(QueryCommand);
+      expect(cmd.input.IndexName).toBe('GSI1');
+      expect(cmd.input.ExpressionAttributeValues[':pk']).toBe('ORDERS');
+    });
 
-  it('findById returns null for unknown id', async () => {
-    const result = await repo.findById('nonexistent-id');
-    expect(result).toBeNull();
-  });
+    it('returns empty array when Items is empty', async () => {
+      const result = await new DynamoOrderRepository(makeClient({ Items: [] }), TABLE).listAll();
+      expect(result).toEqual([]);
+    });
 
-  it('save then findById returns the order with all fields', async () => {
-    const order = makeOrder();
-    await repo.save(order);
-    const found = await repo.findById(order.id);
-    expect(found).not.toBeNull();
-    expect(found!.id).toBe(order.id);
-    expect(found!.customerId).toBe(order.customerId);
-    expect(found!.status).toBe('PENDING');
-    expect(found!.money.amount).toBe(100);
-    expect(found!.money.currency).toBe('USD');
-  });
-
-  it('second save with same id overwrites — findById returns updated values', async () => {
-    const order = makeOrder();
-    await repo.save(order);
-    const processing = order.startProcessing(new SystemClock());
-    await repo.save(processing);
-    const found = await repo.findById(order.id);
-    expect(found!.status).toBe('PROCESSING');
-  });
-
-  it('listAll returns all saved orders', async () => {
-    const o1 = makeOrder();
-    const o2 = makeOrder();
-    await repo.save(o1);
-    await repo.save(o2);
-    const all = await repo.listAll();
-    expect(all).toHaveLength(2);
-    expect(all.map((o) => o.id)).toContain(o1.id);
-    expect(all.map((o) => o.id)).toContain(o2.id);
-  });
-
-  it('listAll returns [] when table is empty', async () => {
-    const all = await repo.listAll();
-    expect(all).toEqual([]);
+    it('maps all Items to Orders', async () => {
+      const o1 = makeOrder();
+      const o2 = makeOrder();
+      const client = makeClient({ Items: [toItem(o1), toItem(o2)] });
+      const all = await new DynamoOrderRepository(client, TABLE).listAll();
+      expect(all).toHaveLength(2);
+      expect(all.map((o) => o.id)).toContain(o1.id);
+      expect(all.map((o) => o.id)).toContain(o2.id);
+    });
   });
 });

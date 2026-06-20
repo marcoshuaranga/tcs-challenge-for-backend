@@ -1,2 +1,2 @@
-export { CreateOrderSchema, OrderResponseSchema, ErrorEnvelopeSchema } from './order';
-export type { CreateOrderDto, OrderResponseDto } from './order';
+export { CreateOrderSchema, OrderResponseSchema, ErrorEnvelopeSchema, ProcessOrderMessageSchema } from './order';
+export type { CreateOrderDto, OrderResponseDto, ProcessOrderMessage } from './order';

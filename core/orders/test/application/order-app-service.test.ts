@@ -47,13 +47,14 @@ function makeService() {
 }
 
 describe('OrderAppService', () => {
-  it('registerOrder returns ok(orderId) on valid input', async () => {
+  it('registerOrder returns ok(order) on valid input', async () => {
     const svc = makeService();
     const result = await svc.registerOrder({ customerId: 'C1', amount: 50, currency: 'USD' });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(typeof result.value).toBe('string');
-      expect(result.value.length).toBeGreaterThan(0);
+      expect(typeof result.value.id).toBe('string');
+      expect(result.value.id.length).toBeGreaterThan(0);
+      expect(result.value.status).toBe('PENDING');
     }
   });
 
@@ -72,7 +73,7 @@ describe('OrderAppService', () => {
     expect(registered.ok).toBe(true);
     if (!registered.ok) return;
 
-    const result = await svc.processOrder(registered.value);
+    const result = await svc.processOrder(registered.value.id);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value).toBeUndefined();
@@ -93,8 +94,8 @@ describe('OrderAppService', () => {
     const registered = await svc.registerOrder({ customerId: 'C1', amount: 50, currency: 'USD' });
     expect(registered.ok).toBe(true);
     if (!registered.ok) return;
-    await svc.processOrder(registered.value);
-    const result = await svc.processOrder(registered.value);
+    await svc.processOrder(registered.value.id);
+    const result = await svc.processOrder(registered.value.id);
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toBeInstanceOf(InvalidStateTransitionError);
@@ -106,10 +107,10 @@ describe('OrderAppService', () => {
     const registered = await svc.registerOrder({ customerId: 'C1', amount: 50, currency: 'USD' });
     expect(registered.ok).toBe(true);
     if (!registered.ok) return;
-    const result = await svc.getOrder(registered.value);
+    const result = await svc.getOrder(registered.value.id);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value.id).toBe(registered.value);
+      expect(result.value.id).toBe(registered.value.id);
     }
   });
 
@@ -127,7 +128,7 @@ describe('OrderAppService', () => {
     const registered = await svc.registerOrder({ customerId: 'C1', amount: 50, currency: 'USD' });
     expect(registered.ok).toBe(true);
     if (!registered.ok) return;
-    const result = await svc.getOrderAudit(registered.value);
+    const result = await svc.getOrderAudit(registered.value.id);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(Array.isArray(result.value)).toBe(true);

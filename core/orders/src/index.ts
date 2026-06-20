@@ -94,6 +94,7 @@ export function composeOrders(
 }
 
 export { OrderAppService } from './application/order-app-service';
+export type { Order } from './domain/order';
 export { InvalidMoneyError } from './domain/errors';
 export { InMemoryMessagePublisher } from './infrastructure/in-memory-message-publisher';
 export { InvalidStateTransitionError, OrderNotFoundError } from '@tcs-challenge-for-backend/kernel';

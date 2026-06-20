@@ -13,7 +13,7 @@ describe('startPollLoop', () => {
     // Use a standalone InMemoryMessagePublisher seeded with the orderId
     const publisher = new InMemoryMessagePublisher();
     if (!result.ok) return;
-    await publisher.publishProcessOrder(result.value);
+    await publisher.publishProcessOrder(result.value.id);
 
     // Spy on processOrder
     const spy = vi.spyOn(app, 'processOrder');
@@ -23,7 +23,7 @@ describe('startPollLoop', () => {
     await new Promise((r) => setTimeout(r, 10));
     stop();
 
-    expect(spy).toHaveBeenCalledWith(result.value);
+    expect(spy).toHaveBeenCalledWith(result.value.id);
   });
 
   it('empty queue — poll-loop iterates without calling processOrder', async () => {

@@ -48,6 +48,7 @@ export class ProcessOrderHandler {
         previousState: 'PROCESSING',
         newState: 'FAILED',
         timestamp: failed.updatedAt,
+        reason: failed.failureReason,
       });
     }
   }
