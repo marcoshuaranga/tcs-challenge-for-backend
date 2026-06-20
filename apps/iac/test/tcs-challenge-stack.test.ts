@@ -95,3 +95,32 @@ describe('orders-api Lambda + API Gateway', () => {
     template.resourceCountIs('AWS::ApiGatewayV2::Integration', 1);
   });
 });
+
+describe('orders-worker Lambda + SQS event source', () => {
+  it('orders-worker log group has 7-day retention and DESTROY policy', () => {
+    template.resourceCountIs('AWS::Logs::LogGroup', 2);
+  });
+
+  it('stack has two Lambda functions', () => {
+    template.resourceCountIs('AWS::Lambda::Function', 2);
+  });
+
+  it('orders-worker Lambda has required env vars', () => {
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      Environment: {
+        Variables: Match.objectLike({
+          ORDERS_TABLE: Match.anyValue(),
+          QUEUE_URL: Match.anyValue(),
+          USE_AWS_DYNAMO: 'true',
+          USE_AWS_SQS: 'true',
+        }),
+      },
+    });
+  });
+
+  it('orders-worker Lambda has SQS event source mapping with batchSize 1', () => {
+    template.hasResourceProperties('AWS::Lambda::EventSourceMapping', {
+      BatchSize: 1,
+    });
+  });
+});

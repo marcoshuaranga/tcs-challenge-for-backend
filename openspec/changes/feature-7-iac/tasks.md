@@ -52,7 +52,7 @@
 
 ## 5. apps/iac — orders-api Lambda + API Gateway (TDD)
 
-- [ ] 5.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
+- [x] 5.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
       — stack has an `AWS::Logs::LogGroup` for orders-api with `RetentionInDays: 7`
       and `DeletionPolicy: Delete`;
       — stack has an `AWS::Lambda::Function` with env vars `ORDERS_TABLE`,
@@ -60,19 +60,19 @@
       — that Lambda has a DynamoDB IAM policy scoped to the table ARN;
       — stack has an `AWS::ApiGatewayV2::Api` and an
       `AWS::ApiGatewayV2::Integration` pointing at the orders-api Lambda
-- [ ] 5.2 Add explicit `logs.LogGroup` for orders-api:
+- [x] 5.2 Add explicit `logs.LogGroup` for orders-api:
       `retention: RetentionDays.ONE_WEEK`, `removalPolicy: DESTROY`
-- [ ] 5.3 Add `orders-api` Lambda (`NodejsFunction` pointing at
+- [x] 5.3 Add `orders-api` Lambda (`NodejsFunction` pointing at
       `apps/orders-api/src/lambda.ts`); set env vars: `ORDERS_TABLE`,
       `JWT_SECRET` (from `process.env.JWT_SECRET`), `FAIL_ABOVE_AMOUNT`,
       `USE_AWS_DYNAMO=true`, `AWS_REGION`; wire `logGroup` prop to the managed log group;
       grant `table.grantReadWriteData(ordersApiLambda)`
-- [ ] 5.4 Add `HttpApi` with `HttpLambdaIntegration` routing `ANY /{proxy+}` to
+- [x] 5.4 Add `HttpApi` with `HttpLambdaIntegration` routing `ANY /{proxy+}` to
       `orders-api` Lambda; export API URL as `CfnOutput`
-- [ ] 5.5 Verify CDK assertion tests pass (green)
-- [ ] 5.6 Run `pnpm --filter iac cdk synth` — template valid
-- [ ] 5.7 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
-- [ ] 5.8 Commit: `feat(iac): orders-api Lambda + API Gateway`
+- [x] 5.5 Verify CDK assertion tests pass (green)
+- [x] 5.6 Run `pnpm --filter iac cdk synth` — template valid
+- [x] 5.7 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
+- [x] 5.8 Commit: `feat(iac): orders-api Lambda + API Gateway`
 
 ## 6. apps/iac — orders-worker Lambda + SQS event source (TDD)
 

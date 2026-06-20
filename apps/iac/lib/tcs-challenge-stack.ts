@@ -3,6 +3,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as lambdaNodejs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as path from 'path';
@@ -74,5 +75,31 @@ export class TcsChallengeStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, 'OrdersApiUrl', { value: httpApi.url ?? '' });
+
+    // orders-worker Lambda
+    const ordersWorkerLogGroup = new logs.LogGroup(this, 'OrdersWorkerLogGroup', {
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const ordersWorkerLambda = new lambdaNodejs.NodejsFunction(this, 'OrdersWorkerLambda', {
+      entry: path.join(__dirname, '../../orders-worker/src/lambda-handler.ts'),
+      logGroup: ordersWorkerLogGroup,
+      environment: {
+        ORDERS_TABLE: table.tableName,
+        QUEUE_URL: queue.queueUrl,
+        FAIL_ABOVE_AMOUNT: process.env['FAIL_ABOVE_AMOUNT'] ?? '1000',
+        USE_AWS_DYNAMO: 'true',
+        USE_AWS_SQS: 'true',
+        AWS_ACCOUNT_ID: this.account,
+      },
+    });
+
+    table.grantReadWriteData(ordersWorkerLambda);
+    queue.grantConsumeMessages(ordersWorkerLambda);
+
+    ordersWorkerLambda.addEventSource(
+      new lambdaEventSources.SqsEventSource(queue, { batchSize: 1 }),
+    );
   }
 }

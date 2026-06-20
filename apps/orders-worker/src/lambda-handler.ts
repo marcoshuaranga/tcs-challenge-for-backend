@@ -1,5 +1,5 @@
 import type { SQSHandler } from 'aws-lambda';
-import type { OrderAppService } from '@tcs-challenge-for-backend/orders';
+import { composeOrders, type OrderAppService } from '@tcs-challenge-for-backend/orders';
 
 export function makeHandler(appService: OrderAppService): SQSHandler {
   return async (event) => {
@@ -21,3 +21,11 @@ export function makeHandler(appService: OrderAppService): SQSHandler {
     }
   };
 }
+
+const appService = composeOrders({
+  USE_AWS_DYNAMO: process.env['USE_AWS_DYNAMO'],
+  USE_AWS_SQS: process.env['USE_AWS_SQS'],
+  FAIL_ABOVE_AMOUNT: process.env['FAIL_ABOVE_AMOUNT'],
+});
+
+export const handler = makeHandler(appService);
