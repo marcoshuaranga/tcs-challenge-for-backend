@@ -70,8 +70,13 @@ export class OrderAppService {
     }
   }
 
-  async listOrders(): Promise<Result<Order[], never>> {
-    const orders = await this.listOrdersHandler.execute();
-    return ok(orders);
+  async listOrders(): Promise<Result<Order[], AppError>> {
+    try {
+      const orders = await this.listOrdersHandler.execute();
+      return ok(orders);
+    } catch (e) {
+      if (e instanceof AppError) return err(e);
+      throw e;
+    }
   }
 }
