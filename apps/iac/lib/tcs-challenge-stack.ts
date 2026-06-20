@@ -118,9 +118,6 @@ export class TcsChallengeStack extends cdk.Stack {
     const apiDocsLambda = new lambdaNodejs.NodejsFunction(this, 'ApiDocsLambda', {
       entry: path.join(__dirname, '../../api-docs/src/lambda.ts'),
       logGroup: apiDocsLogGroup,
-      environment: {
-        API_URL: httpApi.url ?? '',
-      },
     });
 
     const apiDocsHttpApi = new apigwv2.HttpApi(this, 'ApiDocsHttpApi');
