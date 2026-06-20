@@ -48,10 +48,10 @@
 
 - [ ] 5.1 Implement `apps/web/src/pages/customer.astro`:
       — DaisyUI form (`customerId`, `amount`, `currency`); on submit calls
-        `POST /orders` with `Authorization: Bearer <DEMO_JWT>`; displays
-        returned `id` and `status` or error message;
+      `POST /orders` with `Authorization: Bearer <DEMO_JWT>`; displays
+      returned `id` and `status` or error message;
       — DaisyUI input for order id; on submit calls `GET /orders/:id`; displays
-        order fields or "Order not found"
+      order fields or "Order not found"
 - [ ] 5.2 Verify dev server: create form and status lookup work end-to-end
 - [ ] 5.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
 - [ ] 5.4 Commit: `feat(web): Customer page — create order + status lookup`
@@ -70,5 +70,4 @@
 ## 7. Quality gate
 
 - [ ] 7.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
-- [ ] 7.2 Run `/code-review` on the full change
-- [ ] 7.3 Archive this change with `/opsx:archive`
+- [ ] 7.2 Archive this change with `/opsx:archive`

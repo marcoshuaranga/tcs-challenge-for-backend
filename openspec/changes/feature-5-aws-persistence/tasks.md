@@ -48,7 +48,7 @@
 - [ ] 4.1 Write failing tests in
       `core/orders/test/infrastructure/sqs-message-publisher.test.ts`:
       — `publish({ orderId })` calls `SendMessageCommand` with correct `QueueUrl`
-        and `MessageBody === JSON.stringify({ orderId })`;
+      and `MessageBody === JSON.stringify({ orderId })`;
       — resolves without error when SQS client resolves;
       — rejects with the underlying error when SQS client throws
 - [ ] 4.2 Implement `SqsMessagePublisher` in
@@ -62,9 +62,9 @@
 
 - [ ] 5.1 Write failing tests in `core/orders/test/index.test.ts` (extend existing file):
       — `composeOrders({ USE_AWS_DYNAMO: 'true', ORDERS_TABLE: 't', AWS_REGION: 'us-east-1' })`
-        wires `DynamoOrderRepository` (verify via instanceof or duck-type check);
+      wires `DynamoOrderRepository` (verify via instanceof or duck-type check);
       — `composeOrders({ USE_AWS_SQS: 'true', QUEUE_URL: 'https://sqs/q', AWS_REGION: 'us-east-1' })`
-        wires `SqsMessagePublisher`;
+      wires `SqsMessagePublisher`;
       — `composeOrders({})` still wires in-memory adapters (no regression)
 - [ ] 5.2 Extend `composeOrders(env)` in `core/orders/src/index.ts`:
       read `USE_AWS_DYNAMO` and `USE_AWS_SQS` flags; instantiate DynamoDB/SQS adapters
@@ -78,5 +78,4 @@
 - [ ] 6.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
 - [ ] 6.2 Run `pnpm run test` across workspace — all tests green (DynamoDB Local integration
       tests skip gracefully if `DDB_ENDPOINT` is absent)
-- [ ] 6.3 Run `/code-review` on the full change
-- [ ] 6.4 Archive this change with `/opsx:archive`
+- [ ] 6.3 Archive this change with `/opsx:archive`

@@ -13,7 +13,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3",
+    "@aws-sdk/client-sqs": "^3",
+    "@aws-sdk/lib-dynamodb": "^3",
     "@tcs-challenge-for-backend/contracts": "workspace:*",
-    "@tcs-challenge-for-backend/kernel": "workspace:*"
+    "@tcs-challenge-for-backend/kernel": "workspace:*",
+    "dynamodb-toolbox": "^1"
   }
 }

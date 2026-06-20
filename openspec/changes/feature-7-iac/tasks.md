@@ -40,7 +40,7 @@
 - [ ] 4.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
       — stack has two `AWS::SQS::Queue` resources;
       — main queue `RedrivePolicy` references the DLQ with `maxReceiveCount: 3`
-        (ADR-0006 value);
+      (ADR-0006 value);
       — DLQ has `MessageRetentionPeriod` of 14 days (1209600 seconds)
 - [ ] 4.2 Add DLQ (`sqs.Queue`, 14-day retention, `removalPolicy: DESTROY`) and
       main queue (`sqs.Queue`, redrive policy pointing at DLQ, `removalPolicy: DESTROY`);
@@ -54,10 +54,10 @@
 
 - [ ] 5.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
       — stack has an `AWS::Lambda::Function` with env vars `ORDERS_TABLE`,
-        `USE_AWS_DYNAMO`, `JWT_SECRET`, `FAIL_ABOVE_AMOUNT`;
+      `USE_AWS_DYNAMO`, `JWT_SECRET`, `FAIL_ABOVE_AMOUNT`;
       — that Lambda has a DynamoDB IAM policy scoped to the table ARN;
       — stack has an `AWS::ApiGatewayV2::Api` and an
-        `AWS::ApiGatewayV2::Integration` pointing at the orders-api Lambda
+      `AWS::ApiGatewayV2::Integration` pointing at the orders-api Lambda
 - [ ] 5.2 Add `orders-api` Lambda (`NodejsFunction` pointing at
       `apps/orders-api/src/lambda.ts`); set env vars: `ORDERS_TABLE`,
       `JWT_SECRET` (from `process.env.JWT_SECRET`), `FAIL_ABOVE_AMOUNT`,
@@ -74,9 +74,9 @@
 
 - [ ] 6.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
       — stack has a second `AWS::Lambda::Function` with env vars `ORDERS_TABLE`,
-        `QUEUE_URL`, `USE_AWS_DYNAMO`, `USE_AWS_SQS`;
+      `QUEUE_URL`, `USE_AWS_DYNAMO`, `USE_AWS_SQS`;
       — that Lambda has an `AWS::Lambda::EventSourceMapping` with `BatchSize: 1`
-        pointing at the main SQS queue
+      pointing at the main SQS queue
 - [ ] 6.2 Add `orders-worker` Lambda (`NodejsFunction` pointing at
       `apps/orders-worker/src/lambda-handler.ts`); set env vars: `ORDERS_TABLE`,
       `QUEUE_URL` (from `queue.queueUrl`), `FAIL_ABOVE_AMOUNT`,
@@ -95,5 +95,4 @@
 - [ ] 7.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
 - [ ] 7.2 Run `pnpm run test` across workspace — all CDK assertion tests green
 - [ ] 7.3 Run `pnpm --filter iac cdk synth` — final template valid with all resources
-- [ ] 7.4 Run `/code-review` on the full change
-- [ ] 7.5 Archive this change with `/opsx:archive`
+- [ ] 7.4 Archive this change with `/opsx:archive`
