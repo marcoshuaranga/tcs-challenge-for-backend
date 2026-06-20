@@ -5,7 +5,7 @@ trade-offs, consequences). Status flips to `Accepted` on the commit that impleme
 
 | ADR                                              | Title                                                         | Status   |
 | ------------------------------------------------ | ------------------------------------------------------------- | -------- |
-| [0001](./0001-pnpm-workspaces-monorepo.md)        | pnpm workspaces monorepo                                      | Proposed |
+| [0001](./0001-pnpm-workspaces-monorepo.md)       | pnpm workspaces monorepo                                      | Proposed |
 | [0002](./0002-hono-on-lambda.md)                 | Hono on Lambda as the HTTP entrypoint                         | Proposed |
 | [0003](./0003-composition-root.md)               | Manual composition root (no framework DI)                     | Proposed |
 | [0004](./0004-hexagonal-layering.md)             | Hexagonal layering with OrderAppService facade                | Proposed |

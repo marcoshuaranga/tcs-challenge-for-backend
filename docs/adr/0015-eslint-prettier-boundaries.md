@@ -20,12 +20,12 @@ We need a formatter + linter across the pnpm workspaces monorepo. Two concerns a
 
 ## Options Considered
 
-| Dimension               | ESLint + Prettier (chosen)    | Biome only                         |
-| ----------------------- | ----------------------------- | ---------------------------------- |
-| Familiarity / ecosystem | Universal, well-known         | Newer, smaller ecosystem           |
-| TypeScript rules        | `typescript-eslint` — mature  | Built-in, less configurable        |
-| Toolchain count         | 2 (ESLint + Prettier)         | 1                                  |
-| Risk                    | None                          | Less community precedent for rules |
+| Dimension               | ESLint + Prettier (chosen)   | Biome only                         |
+| ----------------------- | ---------------------------- | ---------------------------------- |
+| Familiarity / ecosystem | Universal, well-known        | Newer, smaller ecosystem           |
+| TypeScript rules        | `typescript-eslint` — mature | Built-in, less configurable        |
+| Toolchain count         | 2 (ESLint + Prettier)        | 1                                  |
+| Risk                    | None                         | Less community precedent for rules |
 
 ## Trade-off Analysis
 

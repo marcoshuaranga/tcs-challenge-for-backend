@@ -31,16 +31,16 @@ flowchart LR
 
 ## Monorepo layout
 
-| Path                 | Purpose                                                          |
-| -------------------- | ---------------------------------------------------------------- |
-| `apps/orders-api`    | Hono HTTP edge on Lambda; entrypoint                             |
-| `apps/orders-worker` | Async processor (SQS / local poll-loop)                          |
-| `apps/api-docs`      | OpenAPI generation + Scalar UI                                   |
-| `apps/web`           | Astro + Tailwind + DaisyUI, 3 public pages                       |
-| `apps/iac`           | AWS CDK stack                                                    |
+| Path                 | Purpose                                                               |
+| -------------------- | --------------------------------------------------------------------- |
+| `apps/orders-api`    | Hono HTTP edge on Lambda; entrypoint                                  |
+| `apps/orders-worker` | Async processor (SQS / local poll-loop)                               |
+| `apps/api-docs`      | OpenAPI generation + Scalar UI                                        |
+| `apps/web`           | Astro + Tailwind + DaisyUI, 3 public pages                            |
+| `apps/iac`           | AWS CDK stack                                                         |
 | `core/orders`        | Hexagonal core: domain, application, infrastructure, composition root |
-| `core/contracts`     | Zod schemas + DTOs (single source of truth)                      |
-| `core/kernel`        | Result/error types, ids, clock                                   |
+| `core/contracts`     | Zod schemas + DTOs (single source of truth)                           |
+| `core/kernel`        | Result/error types, ids, clock                                        |
 
 ## Tech
 
