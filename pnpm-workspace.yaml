@@ -8,3 +8,7 @@ onlyBuiltDependencies:
   - esbuild
 
 autoInstallPeers: true
+
+allowBuilds:
+  esbuild: true
+  unrs-resolver: false
