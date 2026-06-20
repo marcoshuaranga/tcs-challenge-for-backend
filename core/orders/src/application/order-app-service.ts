@@ -12,6 +12,7 @@ import type { Order } from '../domain/order';
 import type { CreateOrderHandler } from './create-order-handler';
 import type { GetOrderAuditHandler } from './get-order-audit-handler';
 import type { GetOrderHandler } from './get-order-handler';
+import type { ListOrdersHandler } from './list-orders-handler';
 import type { ProcessOrderHandler } from './process-order-handler';
 import type { OrderRepositoryPort } from './ports';
 
@@ -20,6 +21,7 @@ export class OrderAppService {
     private readonly createOrderHandler: CreateOrderHandler,
     private readonly processOrderHandler: ProcessOrderHandler,
     private readonly orderRepo: OrderRepositoryPort,
+    private readonly listOrdersHandler: ListOrdersHandler,
     private readonly getOrderHandler: GetOrderHandler,
     private readonly getOrderAuditHandler: GetOrderAuditHandler,
   ) {}
@@ -66,5 +68,10 @@ export class OrderAppService {
       if (e instanceof AppError) return err(e);
       throw e;
     }
+  }
+
+  async listOrders(): Promise<Result<Order[], never>> {
+    const orders = await this.listOrdersHandler.execute();
+    return ok(orders);
   }
 }

@@ -93,9 +93,7 @@ describe('OrderAppService', () => {
     const registered = await svc.registerOrder({ customerId: 'C1', amount: 50, currency: 'USD' });
     expect(registered.ok).toBe(true);
     if (!registered.ok) return;
-    // Process once to move it out of PENDING
     await svc.processOrder(registered.value);
-    // Second call should fail since order is now COMPLETED
     const result = await svc.processOrder(registered.value);
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -143,6 +141,26 @@ describe('OrderAppService', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toBeInstanceOf(OrderNotFoundError);
+    }
+  });
+
+  it('listOrders returns ok([...orders]) when orders exist', async () => {
+    const svc = makeService();
+    await svc.registerOrder({ customerId: 'C1', amount: 50, currency: 'USD' });
+    await svc.registerOrder({ customerId: 'C2', amount: 75, currency: 'USD' });
+    const result = await svc.listOrders();
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toHaveLength(2);
+    }
+  });
+
+  it('listOrders returns ok([]) when the repository is empty', async () => {
+    const svc = makeService();
+    const result = await svc.listOrders();
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toEqual([]);
     }
   });
 });
