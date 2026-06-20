@@ -12,7 +12,7 @@ call `POST /orders` with the Bearer demo JWT and display the created order id an
 
 #### Scenario: Successful order creation displays the order id
 - **WHEN** the user fills in the form and submits valid data
-- **THEN** the page calls `POST /orders` with `Authorization: Bearer <DEMO_JWT>`
+- **THEN** the page calls `POST /orders` with `Authorization: Bearer <PUBLIC_DEMO_JWT>`
   and displays the returned order `id` and `status: PENDING`
 
 #### Scenario: API error is shown to the user

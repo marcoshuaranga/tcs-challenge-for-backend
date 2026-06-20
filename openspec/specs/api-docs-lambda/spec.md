@@ -14,7 +14,7 @@ orders-api Lambda and CDK constructs.
 with two routes:
 - `GET /openapi.json` — returns the OpenAPI 3.1 JSON spec generated from
   `@tcs-challenge-for-backend/contracts` Zod schemas via `@asteasolutions/zod-to-openapi`.
-- `GET /` (and `GET /docs`) — serves the Scalar UI pointing at `/openapi.json`.
+- `GET /` — serves the Scalar UI pointing at `/openapi.json`.
 
 The spec SHALL include `info.title`, `info.version`, and all order-related routes derived
 from the contracts schemas.

@@ -12,7 +12,6 @@
 ## Non-Goals
 
 - Custom domain / Route 53 / ACM certificate.
-- CORS configuration on the existing `orders-api` (separate concern).
 - CI/CD pipeline for automated builds and deploys.
 - Astro SSR mode — `apps/web` remains `output: 'static'`.
 
@@ -21,7 +20,7 @@
 ### New Capabilities
 
 - `api-docs-lambda`: `apps/api-docs` exposed as a Lambda function behind an HTTP API Gateway, identical deployment pattern to `orders-api`.
-- `web-static-site`: `apps/web` static build deployed to S3 + CloudFront; build-time env vars (`PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, `DEMO_JWT`) sourced from CDK outputs of prior deploys.
+- `web-static-site`: `apps/web` static build deployed to S3 + CloudFront; build-time env vars (`PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, `PUBLIC_DEMO_JWT`) sourced from CDK outputs of prior deploys.
 
 ### Modified Capabilities
 

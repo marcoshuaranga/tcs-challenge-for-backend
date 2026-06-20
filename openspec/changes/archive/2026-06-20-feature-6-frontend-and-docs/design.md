@@ -19,7 +19,7 @@ the HTTP API; they do not import `core/orders` directly.
 - Build Astro + Tailwind + DaisyUI pages: Landing, Customer, Backoffice.
 - Customer page: create order form (POST /orders) + status lookup (GET /orders/:id).
 - Backoffice page: orders table (GET /orders).
-- All API calls use `DEMO_JWT` env var as the static Bearer token.
+- All API calls use `PUBLIC_DEMO_JWT` env var as the static Bearer token.
 
 **Non-Goals:**
 - Authentication, sessions, or OAuth — static demo JWT only.
@@ -51,7 +51,7 @@ Lambda.
 ### Astro in static output mode — fetch API calls from browser JS
 
 `apps/web/` uses `output: 'static'`. Pages fetch the orders API from client-side
-`<script>` tags at runtime. `DEMO_JWT` is injected as a `define:vars` prop so it is
+`<script>` tags at runtime. `PUBLIC_DEMO_JWT` is injected as a `define:vars` prop so it is
 embedded at build time (acceptable for a demo with no production secrets).
 
 Alternative: Astro SSR (`output: 'server'`). Rejected — adds a server runtime for no
@@ -62,7 +62,7 @@ separately.
 
 The brief explicitly scopes to a "static hardcoded demo JWT". This avoids building an
 auth flow out of scope. The demo JWT is signed with `JWT_SECRET` at setup time and
-committed as `DEMO_JWT` in `.env.example` (with a placeholder value).
+committed as `PUBLIC_DEMO_JWT` in `.env.example` (with a placeholder value).
 
 Alternative: real login form. Rejected — out of scope per brief.
 
@@ -78,9 +78,9 @@ running API server in CI, which is not configured.
 
 ## Risks / Trade-offs
 
-- **DEMO_JWT embedded at build time**: the JWT is baked into the static HTML. Acceptable
+- **PUBLIC_DEMO_JWT embedded at build time**: the JWT is baked into the static HTML. Acceptable
   for the demo scope. Mitigation: document that this is a demo-only artifact; never
-  use a production secret as `DEMO_JWT`.
+  use a production secret as `PUBLIC_DEMO_JWT`.
 - **OpenAPI spec accuracy depends on zod-to-openapi annotations**: missing `.openapi()`
   calls produce incomplete specs. Mitigation: verify `/openapi.json` includes all paths
   as part of the quality gate.

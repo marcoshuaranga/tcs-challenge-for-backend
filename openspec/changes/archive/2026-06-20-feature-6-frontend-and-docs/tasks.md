@@ -34,7 +34,7 @@
 - [x] 3.2 Configure `astro.config.mjs`: `output: 'static'`, Tailwind integration
 - [x] 3.3 Configure `tailwind.config.mjs`: add DaisyUI plugin
 - [x] 3.4 Add `apps/web` to `pnpm-workspace.yaml`; run `pnpm install`
-- [x] 3.5 Add `PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, and `DEMO_JWT` to `.env.example`
+- [x] 3.5 Add `PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, and `PUBLIC_DEMO_JWT` to `.env.example`
 
 ## 4. apps/web — Landing page
 
@@ -48,7 +48,7 @@
 
 - [x] 5.1 Implement `apps/web/src/pages/customer.astro`:
       — DaisyUI form (`customerId`, `amount`, `currency`); on submit calls
-      `POST /orders` with `Authorization: Bearer <DEMO_JWT>`; displays
+      `POST /orders` with `Authorization: Bearer <PUBLIC_DEMO_JWT>`; displays
       returned `id` and `status` or error message;
       — DaisyUI input for order id; on submit calls `GET /orders/:id`; displays
       order fields or "Order not found"
@@ -59,7 +59,7 @@
 ## 6. apps/web — Backoffice page
 
 - [x] 6.1 Implement `apps/web/src/pages/backoffice.astro`: on load calls
-      `GET /orders` with `Authorization: Bearer <DEMO_JWT>`; renders DaisyUI
+      `GET /orders` with `Authorization: Bearer <PUBLIC_DEMO_JWT>`; renders DaisyUI
       table (`id`, `status`, `customerId`, `amount`, `currency`, `createdAt`);
       empty-state message when `[]`; error message on non-2xx
 - [x] 6.2 Verify dev server: table populates when orders exist; empty-state shown
@@ -70,4 +70,4 @@
 ## 7. Quality gate
 
 - [x] 7.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
-- [ ] 7.2 Archive this change with `/opsx:archive`
+- [x] 7.2 Archive this change with `/opsx:archive`

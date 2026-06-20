@@ -1,7 +1,9 @@
 # AWS Infrastructure Diagram
 
-> Reflects the CDK stack in `apps/iac/lib/tcs-challenge-stack.ts`.
-> All resources are deployed into a single CloudFormation stack: **TcsChallengeStack**.
+> Reflects `apps/iac/lib/tcs-challenge-stack.ts` and `apps/iac/lib/tcs-challenge-web-stack.ts`.
+> Resources are split across **two CloudFormation stacks** (parameterized by `DEPLOY_ENV`, e.g. `dev`):
+> - **`tcs-challenge-${DEPLOY_ENV}`** — API, worker, DynamoDB, SQS
+> - **`tcs-challenge-web-${DEPLOY_ENV}`** — S3 + CloudFront
 
 ---
 
@@ -11,8 +13,8 @@
 flowchart TB
   Browser(["Browser / API Client"])
 
-  subgraph CF_S3["Static frontend — S3 + CloudFront"]
-    CF["CloudFront Distribution\nURL-rewrite Function\n(viewer request)"]
+  subgraph CF_S3["Static frontend — S3 + CloudFront (tcs-challenge-web-env)"]
+    CF["CloudFront Distribution\nURL-rewrite Function (viewer request)\n403/404 → index.html (SPA fallback)"]
     S3["S3 Bucket\nAstro static build\n(private, OAC)"]
     CF -->|origin request| S3
   end
@@ -20,7 +22,7 @@ flowchart TB
   subgraph Orders_API["Orders API — HTTP API + Lambda"]
     APIGW["API Gateway HTTP API\n/{proxy+} ANY"]
     ApiLambda["orders-api Lambda\nHono · Bearer JWT\nNODE_BUNDLING esbuild"]
-    ApiLog["CloudWatch LogGroup\n/aws/lambda/orders-api\n1 week retention"]
+    ApiLog["CloudWatch LogGroup\nCDK-generated name\n1 week retention"]
     APIGW --> ApiLambda
     ApiLambda -. logs .-> ApiLog
   end
@@ -28,7 +30,7 @@ flowchart TB
   subgraph Docs_API["API Docs — HTTP API + Lambda"]
     APIGW_D["API Gateway HTTP API\n/{proxy+} ANY"]
     DocsLambda["api-docs Lambda\nHono · Scalar UI\nzod-to-openapi"]
-    DocsLog["CloudWatch LogGroup\n/aws/lambda/api-docs\n1 week retention"]
+    DocsLog["CloudWatch LogGroup\nCDK-generated name\n1 week retention"]
     APIGW_D --> DocsLambda
     DocsLambda -. logs .-> DocsLog
   end
@@ -41,7 +43,7 @@ flowchart TB
 
   subgraph Worker["Order processor — Lambda"]
     WorkerLambda["orders-worker Lambda\nSQS event source mapping\nbatchSize=1"]
-    WorkerLog["CloudWatch LogGroup\n/aws/lambda/orders-worker\n1 week retention"]
+    WorkerLog["CloudWatch LogGroup\nCDK-generated name\n1 week retention"]
     WorkerLambda -. logs .-> WorkerLog
   end
 
@@ -74,6 +76,8 @@ flowchart TB
 
 Grants are scoped to the specific table ARN and queue ARN via CDK helpers
 (`table.grantReadWriteData`, `queue.grantSendMessages`, `queue.grantConsumeMessages`).
+`grantReadWriteData` also covers `UpdateItem`, `DeleteItem`, and batch variants — the table above
+shows the operations actually used by the application, not the full IAM policy.
 
 ---
 
@@ -149,10 +153,10 @@ sequenceDiagram
 
 ## CloudFormation outputs
 
-| Output | Value |
-|--------|-------|
-| `OrdersApiUrl` | HTTP API endpoint for the orders API |
-| `ApiDocsUrl` | HTTP API endpoint for the Scalar UI / OpenAPI spec |
-| `WebUrl` | CloudFront HTTPS URL for the Astro frontend |
-| `OrdersTableName` | DynamoDB table name (injected into Lambda env vars) |
-| `OrdersQueueUrl` | SQS queue URL (injected into Lambda env vars) |
+| Output | Stack | Value |
+|--------|-------|-------|
+| `OrdersApiUrl` | `tcs-challenge-${env}` | HTTP API endpoint for the orders API |
+| `ApiDocsUrl` | `tcs-challenge-${env}` | HTTP API endpoint for the Scalar UI / OpenAPI spec |
+| `WebUrl` | `tcs-challenge-web-${env}` | CloudFront HTTPS URL for the Astro frontend |
+
+`ORDERS_TABLE` and `QUEUE_URL` are injected directly into Lambda env vars — they are **not** exported as stack outputs.

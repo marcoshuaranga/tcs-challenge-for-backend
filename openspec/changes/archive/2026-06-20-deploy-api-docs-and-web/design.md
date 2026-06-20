@@ -7,7 +7,7 @@ local-only: `apps/api-docs` (Hono, serves OpenAPI via Scalar) and `apps/web` (As
 
 The `apps/api-docs` app exports `buildApp()` from `src/app.ts`; no env vars are needed at runtime
 because the OpenAPI document is generated from bundled contracts at cold-start. `apps/web` consumes
-three build-time env vars (`PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, `DEMO_JWT`) baked into the
+three build-time env vars (`PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, `PUBLIC_DEMO_JWT`) baked into the
 static HTML during `astro build`.
 
 ## Goals / Non-Goals
@@ -19,7 +19,6 @@ static HTML during `astro build`.
 
 **Non-Goals:**
 - Custom domain / Route 53 / ACM certificate.
-- CORS on `orders-api`.
 - CI/CD pipeline or automated build triggers.
 - Astro SSR / server-side rendering for `apps/web`.
 
@@ -32,8 +31,8 @@ static HTML during `astro build`.
 - Entry point becomes `apps/api-docs/src/lambda.ts` — wraps `buildApp()` with `handle` from
   `hono/aws-lambda`, identical to how `orders-api/src/lambda.ts` wraps `makeApp(...)`.
 - No new IAM grants needed (api-docs has no AWS dependencies).
-- No env vars needed in the Lambda — the OpenAPI document is generated at startup from bundled
-  contracts, not from runtime configuration.
+- One env var required: `API_URL` — injected by the CDK stack as `httpApi.url` so the OpenAPI
+  document's `servers[].url` points at the deployed orders-api endpoint instead of `localhost:3000`.
 
 **Alternative considered:** serve api-docs from the same Lambda as orders-api on a sub-path.
 Rejected — would couple unrelated concerns, complicate routing, and deviate from existing
@@ -57,13 +56,18 @@ complexity (must copy `dist/` into esbuild output), higher per-request cost, no 
 
 **Chosen:** two-pass deploy for first setup; single-pass for subsequent deploys.
 
-First deploy:
-1. `cdk deploy` — creates infrastructure (web bucket will be empty; CloudFront serves nothing yet).
-2. Note `OrdersApiUrl` and `ApiDocsUrl` from CloudFormation outputs.
-3. Set `PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, `DEMO_JWT` in shell (or `.env`).
-4. `pnpm --filter web build` then `cdk deploy` — uploads `dist/` via BucketDeployment.
+The CDK app is split into two stacks: `TcsChallengeStack` (API + worker + DynamoDB + SQS) and
+`TcsChallengeWebStack` (S3 + CloudFront). This means the first pass can deploy backend
+infrastructure without needing `apps/web/dist/` to exist yet.
 
-Subsequent deploys: build web first, then `cdk deploy`.
+First deploy:
+1. `cdk deploy TcsChallengeStack-<env>` — creates API/worker/DynamoDB/SQS infrastructure.
+2. Note `OrdersApiUrl` and `ApiDocsUrl` from CloudFormation outputs.
+3. Set `PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, `PUBLIC_DEMO_JWT` in shell (or `.env`).
+4. `pnpm --filter web build` — builds Astro static site to `apps/web/dist/`.
+5. `cdk deploy TcsChallengeWebStack-<env>` — uploads `dist/` via BucketDeployment.
+
+Subsequent deploys: build web first (`pnpm --filter web build`), then `cdk deploy TcsChallengeWebStack-<env>`.
 
 **Alternative considered:** CDK custom resource to build Astro during synth/deploy. Rejected —
 adds opaque complexity, violates YAGNI, and doesn't match the scope of this challenge.

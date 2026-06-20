@@ -13,7 +13,7 @@ without writing raw HTTP calls. Feature 6 adds both in one pass — `apps/api-do
 - **New**: `apps/web/` — Astro + Tailwind + DaisyUI static site with 3 pages:
   Landing (system overview), Customer (create order + view status), Backoffice
   (list all orders). All API calls use a hardcoded static demo JWT from the env
-  (`DEMO_JWT`); no real login flow.
+  (`PUBLIC_DEMO_JWT`); no real login flow.
 - **New dependency** in `apps/api-docs/`: `zod-to-openapi`, `@asteasolutions/zod-to-openapi`,
   `@scalar/hono-api-reference`.
 - **New dependency** in `apps/web/`: `astro`, `@astrojs/tailwind`, `daisyui`.

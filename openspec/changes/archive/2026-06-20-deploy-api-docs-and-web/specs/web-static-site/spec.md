@@ -43,7 +43,7 @@ The CDK stack SHALL export the CloudFront HTTPS URL as a `CfnOutput` named `WebU
 `apps/web` SHALL be built with the following env vars set before `astro build`:
 - `PUBLIC_API_URL` — value of `OrdersApiUrl` from the CDK stack output.
 - `PUBLIC_API_DOCS_URL` — value of `ApiDocsUrl` from the CDK stack output.
-- `DEMO_JWT` — a static demo token.
+- `PUBLIC_DEMO_JWT` — a static demo token.
 
 #### Scenario: Web pages reference correct API URLs at runtime
 - **WHEN** the Astro site is built with `PUBLIC_API_URL` and `PUBLIC_API_DOCS_URL` set
