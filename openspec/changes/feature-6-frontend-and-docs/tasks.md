@@ -25,23 +25,23 @@
 - [x] 2.6 Verify dev server: `GET /openapi.json` returns valid JSON;
       `GET /` renders Scalar UI in browser
 - [x] 2.7 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/api-docs`
-- [ ] 2.8 Commit: `feat(api-docs): OpenAPI spec + Scalar UI`
+- [x] 2.8 Commit: `feat(api-docs): OpenAPI spec + Scalar UI`
 
 ## 3. apps/web — setup
 
-- [ ] 3.1 Create `apps/web/package.json` with `astro`, `@astrojs/tailwind`,
+- [x] 3.1 Create `apps/web/package.json` with `astro`, `@astrojs/tailwind`,
       `tailwindcss`, `daisyui`; name `@tcs-challenge-for-backend/web`
-- [ ] 3.2 Configure `astro.config.mjs`: `output: 'static'`, Tailwind integration
-- [ ] 3.3 Configure `tailwind.config.mjs`: add DaisyUI plugin
-- [ ] 3.4 Add `apps/web` to `pnpm-workspace.yaml`; run `pnpm install`
-- [ ] 3.5 Add `PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, and `DEMO_JWT` to `.env.example`
+- [x] 3.2 Configure `astro.config.mjs`: `output: 'static'`, Tailwind integration
+- [x] 3.3 Configure `tailwind.config.mjs`: add DaisyUI plugin
+- [x] 3.4 Add `apps/web` to `pnpm-workspace.yaml`; run `pnpm install`
+- [x] 3.5 Add `PUBLIC_API_URL`, `PUBLIC_API_DOCS_URL`, and `DEMO_JWT` to `.env.example`
 
 ## 4. apps/web — Landing page
 
-- [ ] 4.1 Implement `apps/web/src/pages/index.astro`: title, brief description,
+- [x] 4.1 Implement `apps/web/src/pages/index.astro`: title, brief description,
       DaisyUI card links to `/customer`, `/backoffice`, and `PUBLIC_API_DOCS_URL`
-- [ ] 4.2 Verify dev server shows landing page with all three links
-- [ ] 4.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
+- [x] 4.2 Verify dev server shows landing page with all three links
+- [x] 4.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
 - [ ] 4.4 Commit: `feat(web): Landing page`
 
 ## 5. apps/web — Customer page

@@ -1,0 +1,57 @@
+---
+const apiDocsUrl = import.meta.env.PUBLIC_API_DOCS_URL ?? 'http://localhost:3001';
+---
+
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TCS Order Processing Platform</title>
+  </head>
+  <body class="min-h-screen bg-base-200 flex items-center justify-center p-8">
+    <div class="max-w-2xl w-full">
+      <div class="text-center mb-10">
+        <h1 class="text-4xl font-bold text-base-content mb-3">
+          TCS Order Processing Platform
+        </h1>
+        <p class="text-base-content/70 text-lg">
+          Async order processing with full audit trail. Orders are registered via
+          the API, then processed asynchronously through a state machine
+          (PENDING → PROCESSING → COMPLETED | FAILED).
+        </p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-3">
+        <a href="/customer" class="card bg-base-100 shadow hover:shadow-md transition-shadow">
+          <div class="card-body items-center text-center">
+            <div class="text-3xl mb-2">🛒</div>
+            <h2 class="card-title">Customer</h2>
+            <p class="text-sm text-base-content/60">Create orders and look up order status</p>
+          </div>
+        </a>
+
+        <a href="/backoffice" class="card bg-base-100 shadow hover:shadow-md transition-shadow">
+          <div class="card-body items-center text-center">
+            <div class="text-3xl mb-2">📋</div>
+            <h2 class="card-title">Backoffice</h2>
+            <p class="text-sm text-base-content/60">View all orders in the system</p>
+          </div>
+        </a>
+
+        <a
+          href={apiDocsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="card bg-base-100 shadow hover:shadow-md transition-shadow"
+        >
+          <div class="card-body items-center text-center">
+            <div class="text-3xl mb-2">📖</div>
+            <h2 class="card-title">API Docs</h2>
+            <p class="text-sm text-base-content/60">Interactive OpenAPI reference (Scalar)</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
