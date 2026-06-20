@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
-import { CreateOrderSchema, OrderResponseSchema } from './order.ts';
+import { CreateOrderSchema, OrderResponseSchema } from '../src/order';
 
 describe('CreateOrderSchema', () => {
   it('valid payload parses successfully', () => {

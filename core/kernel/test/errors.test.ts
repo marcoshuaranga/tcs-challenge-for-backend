@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AppError, InvalidStateTransitionError, OrderNotFoundError } from './errors.ts';
+import { AppError, InvalidStateTransitionError, OrderNotFoundError } from '../src/errors';
 
 describe('AppError', () => {
   it('is instanceof Error', () => {

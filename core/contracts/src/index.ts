@@ -1,2 +1,2 @@
-export { CreateOrderSchema, OrderResponseSchema } from './order.ts';
-export type { CreateOrderDto, OrderResponseDto } from './order.ts';
+export { CreateOrderSchema, OrderResponseSchema } from './order';
+export type { CreateOrderDto, OrderResponseDto } from './order';

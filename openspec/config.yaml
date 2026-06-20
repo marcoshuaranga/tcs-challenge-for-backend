@@ -31,8 +31,15 @@ context: |
 
   Package manager: pnpm only. Never generate package-lock.json or yarn.lock.
   Scripts: pnpm install / pnpm --filter <pkg> <script> / pnpm -r run <script> / pnpm dlx for one-off tools.
+    Root convenience scripts: `pnpm run typecheck` (tsc --noEmit across all packages) / `pnpm run test` (vitest across all packages).
 
-  Tooling: ESLint + Prettier (pnpm dlx prettier --write . / pnpm dlx eslint .). No Biome.
+  Tooling: ESLint + Prettier.
+    lint:    pnpm run lint
+    format:  pnpm dlx prettier --write .
+
+  Test layout: tests live in `test/` sibling to `src/` for every core package
+    (e.g. core/kernel/test/, core/contracts/test/, core/orders/test/).
+    Imports from test files use `../src/` prefix. tsconfig includes both src/ and test/.
 
   Methodology: Feature-driven + spec-driven (OpenSpec). XP practices applied:
     - TDD: test tasks precede implementation tasks in tasks.md (Red → Green → Refactor).
@@ -51,6 +58,9 @@ context: |
     - ProcessOrderHandler is idempotent (no-op if order not in processable state).
     - Audit is explicit: RecordAuditEntryHandler called on every state change (no Streams, no listeners).
     - FAILED comes from PaymentGatewayPort.authorize() returning approved=false; DLQ is infra failure.
+    - Node.js built-ins use the `node:` protocol — `import { x } from 'node:crypto'`, never the `crypto` web global.
+    - Import paths NEVER include the `.ts` extension (write `from './result'`, not `from './result.ts'`). The bundler resolves the extension.
+    - Test files live in `<package>/test/`, never inside `src/`. Imports use `../src/` prefix.
 
   ADRs in docs/adr/ are final — implement, don't re-litigate.
   Feature scope: see docs/design.md §6 (user-story traceability table).
@@ -76,7 +86,11 @@ rules:
 
   tasks:
     - Test tasks MUST precede their implementation tasks (XP TDD order: RED → GREEN)
-    - Each task group follows: write test → implement → verify green → pnpm dlx eslint . + pnpm dlx prettier --check . → commit
-    - Quality gate at feature close: pnpm dlx eslint . workspace-wide, all tests green, /code-review, /opsx:archive
+    - Each task group follows: write test → implement → verify green → pnpm run lint + pnpm dlx prettier --check . → commit
+    - Quality gate at feature close: `pnpm run typecheck` zero errors + `pnpm run test` all green + `pnpm run lint` + /code-review + /opsx:archive
     - Each task is completable in a single focused session
     - Group by logical unit (e.g., one group per file or per spec requirement)
+    - Test file paths MUST use `<package>/test/<name>.test.ts` — never `<package>/src/<name>.test.ts`
+    - When referencing a source file from a test, import path MUST start with `../src/`
+    - When a package gains its first test, verify its tsconfig `include` has `"test/**/*.ts"` alongside `"src/**/*.ts"`
+    - When using any Node.js built-in (crypto, fs, path…), import via `node:` protocol, not as a global

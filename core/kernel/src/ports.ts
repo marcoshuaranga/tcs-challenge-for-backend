@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 export interface IdGeneratorPort {
   generate(): string;
 }
@@ -8,7 +10,7 @@ export interface ClockPort {
 
 export class UuidGenerator implements IdGeneratorPort {
   generate(): string {
-    return crypto.randomUUID();
+    return randomUUID();
   }
 }
 

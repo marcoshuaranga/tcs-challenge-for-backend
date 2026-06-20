@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { err, ok } from './result.ts';
+import { type Result, err, ok } from '../src/result';
 
 describe('Result', () => {
   it('ok(value) returns { ok: true, value }', () => {
@@ -13,16 +13,16 @@ describe('Result', () => {
   });
 
   it('TypeScript narrows value/error when branching on result.ok', () => {
-    const result: ReturnType<typeof ok<number>> | ReturnType<typeof err<string>> = ok(99);
-
-    if (result.ok) {
-      // TypeScript should narrow result.value to number here
-      const val: number = result.value;
-      expect(val).toBe(99);
-    } else {
-      // TypeScript should narrow result.error to string here
-      const e: string = result.error;
-      expect(e).toBe('never reached');
+    function process(result: Result<number, string>): number | string {
+      if (result.ok) {
+        const val: number = result.value;
+        return val;
+      } else {
+        const e: string = result.error;
+        return e;
+      }
     }
+    expect(process(ok(99))).toBe(99);
+    expect(process(err('fail'))).toBe('fail');
   });
 });

@@ -6,5 +6,8 @@
     ".": {
       "@tcs-challenge-for-backend/source": "./src/index.ts"
     }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
   }
 }
