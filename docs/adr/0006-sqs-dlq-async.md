@@ -1,6 +1,6 @@
 # ADR-0006: SQS + DLQ for asynchronous processing
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 ## Context
 

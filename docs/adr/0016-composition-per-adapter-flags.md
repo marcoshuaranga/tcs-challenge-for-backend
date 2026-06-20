@@ -1,6 +1,6 @@
 # ADR-0016: Adapter selection by per-adapter env flags in the composition root
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 ## Context
 

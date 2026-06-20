@@ -1,6 +1,6 @@
 # ADR-0003: Manual composition root (no framework DI)
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 ## Context
 

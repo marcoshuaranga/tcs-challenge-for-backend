@@ -1,6 +1,6 @@
 # ADR-0004: Hexagonal layering with an OrderAppService facade
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 ## Context
 

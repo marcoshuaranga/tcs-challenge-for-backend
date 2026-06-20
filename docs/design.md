@@ -148,8 +148,8 @@ index at [`docs/adr/README.md`](./adr/README.md). Summary:
 
 **Aggregate `Order`**
 
-- Fields: `id, customerId, money, status, createdAt, updatedAt`.
-- `static create(props): Order` → `PENDING`, stamps `createdAt`, raises `OrderCreated`.
+- Fields: `id, customerId, money, status, createdAt, updatedAt, failureReason?`.
+- `static create(props): Order` → `PENDING`, stamps `createdAt` and `updatedAt`.
 - `startProcessing()` → guard `PENDING→PROCESSING`, returns `{ previous, next }`.
 - `complete()` → guard `PROCESSING→COMPLETED`.
 - `fail(reason)` → guard `PROCESSING→FAILED`.
@@ -186,7 +186,7 @@ stateDiagram-v2
 
 - `CreateOrderHandler`: validate, build `Order(PENDING)`, `repo.save`, call
   `RecordAuditEntryHandler(null→PENDING, ORDER_CREATED)`, then **publish `ProcessOrderMessage`**
-  via `MessagePublisherPort` (explicit orchestration — no event-bus saga). Returns `orderId`.
+  via `MessagePublisherPort` (explicit orchestration — no event-bus saga). Returns created `Order`.
 - `ProcessOrderHandler`:
   1. `repo.findById`; **idempotency guard** — no-op if not `PENDING`.
   2. `order.startProcessing()` → audit `ORDER_PROCESSING_STARTED` → save.
@@ -259,8 +259,8 @@ invocations); routes in §6; bearer middleware; maps domain errors to HTTP codes
 
 | Method | Path                  | Auth   | Body (Zod)                         | Success                                                       |
 | ------ | --------------------- | ------ | ---------------------------------- | ------------------------------------------------------------- |
-| POST   | `/orders`             | Bearer | `{ customerId, amount, currency }` | `201 { id, status, customerId, amount, currency, createdAt }` |
-| GET    | `/orders/:id`         | Bearer | —                                  | `200 OrderResponse`                                           |
+| POST   | `/orders`             | Bearer | `{ customerId, amount, currency }` | `201 { id, status, customerId, amount, currency, createdAt, updatedAt }` |
+| GET    | `/orders/:id`         | Bearer | —                                  | `200 OrderResponse` (includes `failureReason` when `FAILED`)  |
 | GET    | `/orders/:id/audit`   | Bearer | —                                  | `200 AuditEntry[]`                                            |
 | GET    | `/orders`             | Bearer | —                                  | `200 OrderResponse[]`                                         |
 | POST   | `/orders/:id/process` | Bearer | —                                  | `202 { id, status }`                                          |

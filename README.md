@@ -253,7 +253,7 @@ curl -s -X POST http://localhost:3000/orders \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"customerId":"cust-123","amount":500,"currency":"USD"}' | jq
-# → 201 { id, status: "PENDING", customerId, amount, currency, createdAt }
+# → 201 { id, status: "PENDING", customerId, amount, currency, createdAt, updatedAt }
 ```
 
 ### 3. Query an order

@@ -1,6 +1,6 @@
 # ADR-0002: Hono on Lambda as the HTTP entrypoint
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 ## Context
 

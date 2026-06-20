@@ -1,6 +1,6 @@
 # ADR-0009: Explicit audit via command (not DynamoDB Streams)
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 ## Context
 

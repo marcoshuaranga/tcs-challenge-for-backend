@@ -5,19 +5,19 @@ trade-offs, consequences). Status flips to `Accepted` on the commit that impleme
 
 | ADR                                              | Title                                                         | Status   |
 | ------------------------------------------------ | ------------------------------------------------------------- | -------- |
-| [0001](./0001-pnpm-workspaces-monorepo.md)       | pnpm workspaces monorepo                                      | Proposed |
-| [0002](./0002-hono-on-lambda.md)                 | Hono on Lambda as the HTTP entrypoint                         | Proposed |
-| [0003](./0003-composition-root.md)               | Manual composition root (no framework DI)                     | Proposed |
-| [0004](./0004-hexagonal-layering.md)             | Hexagonal layering with OrderAppService facade                | Proposed |
-| [0005](./0005-dynamodb-single-table.md)          | DynamoDB + dynamodb-toolbox single-table design               | Proposed |
-| [0006](./0006-sqs-dlq-async.md)                  | SQS + DLQ for async processing                                | Proposed |
-| [0007](./0007-cqrs-transport-bridge.md)          | Plain command/query handlers + cross-process transport        | Proposed |
-| [0008](./0008-state-machine.md)                  | State machine with explicit orchestration                     | Proposed |
-| [0009](./0009-explicit-audit-command.md)         | Explicit audit via command (not Streams)                      | Proposed |
-| [0010](./0010-local-combined-runtime.md)         | Local in-memory transport ⇒ combined local runtime            | Proposed |
-| [0011](./0011-aws-cdk-iac.md)                    | AWS CDK for IaC                                               | Proposed |
-| [0012](./0012-contracts-zod-openapi.md)          | Contracts single source of truth (Zod → OpenAPI)              | Proposed |
-| [0013](./0013-payment-gateway-failed-trigger.md) | PaymentGatewayPort as the FAILED trigger                      | Proposed |
-| [0014](./0014-minor-decisions.md)                | Minor decisions log                                           | Proposed |
-| [0015](./0015-eslint-prettier-boundaries.md)     | ESLint + Prettier for code style; ESLint for boundaries       | Proposed |
-| [0016](./0016-composition-per-adapter-flags.md)  | Adapter selection by per-adapter env flags (composition root) | Proposed |
+| [0001](./0001-pnpm-workspaces-monorepo.md)       | pnpm workspaces monorepo                                      | Accepted |
+| [0002](./0002-hono-on-lambda.md)                 | Hono on Lambda as the HTTP entrypoint                         | Accepted |
+| [0003](./0003-composition-root.md)               | Manual composition root (no framework DI)                     | Accepted |
+| [0004](./0004-hexagonal-layering.md)             | Hexagonal layering with OrderAppService facade                | Accepted |
+| [0005](./0005-dynamodb-single-table.md)          | DynamoDB + dynamodb-toolbox single-table design               | Accepted |
+| [0006](./0006-sqs-dlq-async.md)                  | SQS + DLQ for async processing                                | Accepted |
+| [0007](./0007-cqrs-transport-bridge.md)          | Plain command/query handlers + cross-process transport        | Accepted |
+| [0008](./0008-state-machine.md)                  | State machine with explicit orchestration                     | Accepted |
+| [0009](./0009-explicit-audit-command.md)         | Explicit audit via command (not Streams)                      | Accepted |
+| [0010](./0010-local-combined-runtime.md)         | Local in-memory transport ⇒ combined local runtime            | Accepted |
+| [0011](./0011-aws-cdk-iac.md)                    | AWS CDK for IaC                                               | Accepted |
+| [0012](./0012-contracts-zod-openapi.md)          | Contracts single source of truth (Zod → OpenAPI)              | Accepted |
+| [0013](./0013-payment-gateway-failed-trigger.md) | PaymentGatewayPort as the FAILED trigger                      | Accepted |
+| [0014](./0014-minor-decisions.md)                | Minor decisions log                                           | Accepted |
+| [0015](./0015-eslint-prettier-boundaries.md)     | ESLint + Prettier for code style; ESLint for boundaries       | Accepted |
+| [0016](./0016-composition-per-adapter-flags.md)  | Adapter selection by per-adapter env flags (composition root) | Accepted |

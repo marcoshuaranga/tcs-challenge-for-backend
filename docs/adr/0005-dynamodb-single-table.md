@@ -1,6 +1,6 @@
 # ADR-0005: DynamoDB + dynamodb-toolbox, single-table design
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 ## Context
 

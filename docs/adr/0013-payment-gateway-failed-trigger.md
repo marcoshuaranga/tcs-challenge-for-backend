@@ -1,6 +1,6 @@
 # ADR-0013: PaymentGatewayPort as the FAILED trigger
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 ## Context
 

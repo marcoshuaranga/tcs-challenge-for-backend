@@ -1,6 +1,6 @@
 # ADR-0012: Contracts as single source of truth (Zod → OpenAPI)
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 ## Context
 

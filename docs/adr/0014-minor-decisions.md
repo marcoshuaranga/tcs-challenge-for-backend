@@ -1,6 +1,6 @@
 # ADR-0014: Minor decisions log
 
-**Status:** Proposed · **Date:** 2026-06-19 · **Deciders:** Solution author
+**Status:** Accepted · **Date:** 2026-06-19 · **Deciders:** Solution author
 
 Smaller decisions that don't each warrant a full ADR but should be recorded.
 
