@@ -15,6 +15,7 @@ registering an order. A corresponding TypeScript type `CreateOrderDto` SHALL be 
 the schema and re-exported.
 
 Fields:
+
 - `customerId`: non-empty string (min length 1).
 - `amount`: positive number (strictly greater than 0).
 - `currency`: string of exactly 3 uppercase letters (structural ISO 4217 check).
@@ -53,6 +54,7 @@ resource returned by the API. A corresponding TypeScript type `OrderResponseDto`
 inferred and re-exported.
 
 Fields:
+
 - `id`: non-empty string.
 - `status`: one of `'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'`.
 - `customerId`: non-empty string.

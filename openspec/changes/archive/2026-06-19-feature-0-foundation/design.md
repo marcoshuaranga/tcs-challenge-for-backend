@@ -12,6 +12,7 @@ enforced — only what Feature 1 strictly requires is included here.
 ## Goals / Non-Goals
 
 **Goals:**
+
 - `Result<T,E>` discriminated union with `ok()` / `err()` constructors and type-narrowing helpers.
 - `AppError` base class; `OrderNotFoundError` and `InvalidStateTransitionError` concrete errors.
 - `IdGeneratorPort` interface + `UuidGenerator` implementation (wraps `crypto.randomUUID`).
@@ -20,6 +21,7 @@ enforced — only what Feature 1 strictly requires is included here.
 - All exports via barrel `index.ts` in each lib.
 
 **Non-Goals:**
+
 - `AuditEntry`, `ProcessOrderMessage`, `ListOrdersResponse` schemas (Feature 2/3 scope).
 - `ErrorResponseSchema` or HTTP-level envelope types (API layer concern).
 - Any DI container, decorator, or `reflect-metadata` usage.
@@ -30,10 +32,11 @@ enforced — only what Feature 1 strictly requires is included here.
 ### Result<T,E> as discriminated union, not thrown exceptions
 
 ```typescript
-type Result<T, E> = { ok: true; value: T } | { ok: false; error: E }
+type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 ```
 
 Alternatives considered:
+
 - **Throw everywhere**: simpler to write, but forces every caller to wrap in try/catch and loses
   type information on the error. Cross-layer exception contracts become implicit.
 - **Option/Maybe**: only models absence, not failure reason. Not sufficient for `FAILED` with a

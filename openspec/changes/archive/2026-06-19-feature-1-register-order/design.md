@@ -11,6 +11,7 @@ feature-specific decisions needed to implement without ambiguity.
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Implement `Order` aggregate (PENDING creation only), `OrderId`, `Money` value objects, `AuditEntry`.
 - Wire `CreateOrderHandler`, `RecordAuditEntryHandler`, `OrderAppService` with three in-memory
   adapters and `composeOrders(env)`.
@@ -18,6 +19,7 @@ feature-specific decisions needed to implement without ambiguity.
 - All domain + handler logic covered by unit tests in `core/orders/test/`.
 
 **Non-Goals:**
+
 - State machine transitions beyond PENDING (Feature 2).
 - DynamoDB / SQS adapters (Feature 3 onwards).
 - `apps/orders-worker` (Feature 2).

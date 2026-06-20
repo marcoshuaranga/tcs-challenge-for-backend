@@ -32,7 +32,6 @@
 - [x] 4.2 Run `pnpm dlx prettier --check .` — fix formatting
 - [x] 4.3 Commit: `feat(kernel): Result type, AppError hierarchy, IdGenerator + Clock ports`
 
-
 ## 5. core/contracts — Zod schemas (TDD)
 
 - [x] 5.1 Add `zod` to `core/contracts` (`pnpm add zod --filter @tcs-challenge-for-backend/contracts`)

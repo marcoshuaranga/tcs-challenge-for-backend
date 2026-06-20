@@ -87,7 +87,8 @@ rules:
   tasks:
     - Test tasks MUST precede their implementation tasks (XP TDD order: RED → GREEN)
     - Each task group follows: write test → implement → verify green → pnpm run lint + pnpm dlx prettier --check . → commit
-    - "Quality gate at feature close: `pnpm run typecheck` zero errors + `pnpm run test` all green + `pnpm run lint` + /code-review + /opsx:archive"
+    - >-
+      Quality gate at feature close: `pnpm run typecheck` zero errors + `pnpm run test` all green + `pnpm run lint` + /code-review + /opsx:archive
     - Each task is completable in a single focused session
     - Group by logical unit (e.g., one group per file or per spec requirement)
     - Test file paths MUST use `<package>/test/<name>.test.ts` — never `<package>/src/<name>.test.ts`
