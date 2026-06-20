@@ -44,5 +44,5 @@ of an event bus, which we don't need at this scope (one consumer, ADR-0006).
 
 ## Action Items
 
-1. [ ] `OrderStatus` guard in `domain`; transition methods return previous/next for audit.
-2. [ ] `CreateOrderHandler` publishes `ProcessOrderMessage` explicitly after persisting.
+1. [x] `OrderStatus` guard in `domain`; transition methods return previous/next for audit.
+2. [x] `CreateOrderHandler` publishes `ProcessOrderMessage` explicitly after persisting.

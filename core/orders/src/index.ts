@@ -15,6 +15,7 @@ import { RecordAuditEntryHandler } from './application/record-audit-entry-handle
 import { DynamoAuditRepository } from './infrastructure/dynamo-audit-repository';
 import { DynamoOrderRepository } from './infrastructure/dynamo-order-repository';
 import { createOrdersTable } from './infrastructure/dynamo-table';
+import { createOrderEntity, createAuditEntity } from './infrastructure/dynamo-entities';
 import { FakePaymentGateway } from './infrastructure/fake-payment-gateway';
 import { InMemoryAuditRepository } from './infrastructure/in-memory-audit-repository';
 import { InMemoryMessagePublisher } from './infrastructure/in-memory-message-publisher';
@@ -46,13 +47,13 @@ export function composeOrders(
   let publisher: MessagePublisherPort;
 
   if (useDynamo) {
-    const { documentClient } = createOrdersTable({
+    const { table } = createOrdersTable({
       tableName: env.ORDERS_TABLE!,
       region: env.AWS_REGION!,
       endpoint: env.DDB_ENDPOINT,
     });
-    orderRepo = new DynamoOrderRepository(documentClient, env.ORDERS_TABLE!);
-    auditRepo = new DynamoAuditRepository(documentClient, env.ORDERS_TABLE!);
+    orderRepo = new DynamoOrderRepository(createOrderEntity(table));
+    auditRepo = new DynamoAuditRepository(createAuditEntity(table));
   } else {
     orderRepo = new InMemoryOrderRepository();
     auditRepo = new InMemoryAuditRepository();

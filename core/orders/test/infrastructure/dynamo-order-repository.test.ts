@@ -1,11 +1,12 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { SystemClock, UuidGenerator } from '@tcs-challenge-for-backend/kernel';
+import { Table } from 'dynamodb-toolbox';
 import { describe, expect, it, vi } from 'vitest';
 import { Money } from '../../src/domain/money';
 import { Order } from '../../src/domain/order';
 import { OrderId } from '../../src/domain/order-id';
-import type { OrderItem } from '../../src/infrastructure/dynamo-entities';
+import { createOrderEntity } from '../../src/infrastructure/dynamo-entities';
 import { DynamoOrderRepository } from '../../src/infrastructure/dynamo-order-repository';
 
 const TABLE = 'orders-table';
@@ -16,11 +17,27 @@ function makeOrder() {
   return Order.create({ id, customerId: 'C1', money: Money.create(100, 'USD'), clock });
 }
 
-function makeClient(response: unknown = {}) {
-  return { send: vi.fn().mockResolvedValue(response) } as unknown as DynamoDBDocumentClient;
+function makeRepoAndMock(response: unknown = {}) {
+  const mockSend = vi.fn().mockResolvedValue(response);
+  const table = new Table({
+    name: TABLE,
+    partitionKey: { name: 'PK', type: 'string' },
+    sortKey: { name: 'SK', type: 'string' },
+    indexes: {
+      GSI1: {
+        type: 'global',
+        partitionKey: { name: 'GSI1PK', type: 'string' },
+        sortKey: { name: 'GSI1SK', type: 'string' },
+      },
+    },
+    documentClient: { send: mockSend } as unknown as DynamoDBDocumentClient,
+  });
+  const entity = createOrderEntity(table);
+  const repo = new DynamoOrderRepository(entity);
+  return { repo, mockSend };
 }
 
-function toItem(order: Order): OrderItem {
+function toRawItem(order: Order) {
   return {
     PK: `ORDER#${order.id}`,
     SK: 'METADATA',
@@ -36,29 +53,30 @@ function toItem(order: Order): OrderItem {
   };
 }
 
-function sentCmd(client: DynamoDBDocumentClient) {
-  return (client.send as ReturnType<typeof vi.fn>).mock.calls[0][0];
+function sentCmd(mockSend: ReturnType<typeof vi.fn>) {
+  return mockSend.mock.calls[0][0];
 }
 
 describe('DynamoOrderRepository', () => {
   describe('findById', () => {
     it('sends GetCommand with PK=ORDER#<id> and SK=METADATA', async () => {
-      const client = makeClient({});
-      await new DynamoOrderRepository(client, TABLE).findById('abc');
-      const cmd = sentCmd(client);
+      const { repo, mockSend } = makeRepoAndMock({});
+      await repo.findById('abc');
+      const cmd = sentCmd(mockSend);
       expect(cmd).toBeInstanceOf(GetCommand);
       expect(cmd.input).toEqual({ TableName: TABLE, Key: { PK: 'ORDER#abc', SK: 'METADATA' } });
     });
 
     it('returns null when Item is absent', async () => {
-      const result = await new DynamoOrderRepository(makeClient({}), TABLE).findById('x');
+      const { repo } = makeRepoAndMock({});
+      const result = await repo.findById('x');
       expect(result).toBeNull();
     });
 
     it('maps Item fields to Order correctly', async () => {
       const order = makeOrder();
-      const client = makeClient({ Item: toItem(order) });
-      const found = await new DynamoOrderRepository(client, TABLE).findById(order.id);
+      const { repo } = makeRepoAndMock({ Item: toRawItem(order) });
+      const found = await repo.findById(order.id);
       expect(found).not.toBeNull();
       expect(found!.id).toBe(order.id);
       expect(found!.customerId).toBe('C1');
@@ -71,10 +89,9 @@ describe('DynamoOrderRepository', () => {
 
     it('maps failureReason when present', async () => {
       const failed = makeOrder().startProcessing(clock).fail('payment_declined', clock);
-      const item = { ...toItem(failed), failureReason: 'payment_declined' };
-      const found = await new DynamoOrderRepository(makeClient({ Item: item }), TABLE).findById(
-        failed.id,
-      );
+      const item = { ...toRawItem(failed), failureReason: 'payment_declined' };
+      const { repo } = makeRepoAndMock({ Item: item });
+      const found = await repo.findById(failed.id);
       expect(found!.failureReason).toBe('payment_declined');
     });
   });
@@ -82,9 +99,9 @@ describe('DynamoOrderRepository', () => {
   describe('save', () => {
     it('sends PutCommand with correctly shaped item', async () => {
       const order = makeOrder();
-      const client = makeClient({});
-      await new DynamoOrderRepository(client, TABLE).save(order);
-      const cmd = sentCmd(client);
+      const { repo, mockSend } = makeRepoAndMock({});
+      await repo.save(order);
+      const cmd = sentCmd(mockSend);
       expect(cmd).toBeInstanceOf(PutCommand);
       const item = cmd.input.Item;
       expect(item.PK).toBe(`ORDER#${order.id}`);
@@ -99,16 +116,16 @@ describe('DynamoOrderRepository', () => {
     });
 
     it('omits failureReason for non-FAILED orders', async () => {
-      const client = makeClient({});
-      await new DynamoOrderRepository(client, TABLE).save(makeOrder());
-      expect(sentCmd(client).input.Item.failureReason).toBeUndefined();
+      const { repo, mockSend } = makeRepoAndMock({});
+      await repo.save(makeOrder());
+      expect(sentCmd(mockSend).input.Item.failureReason).toBeUndefined();
     });
 
     it('includes failureReason when order is FAILED', async () => {
       const failed = makeOrder().startProcessing(clock).fail('payment_declined', clock);
-      const client = makeClient({});
-      await new DynamoOrderRepository(client, TABLE).save(failed);
-      const item = sentCmd(client).input.Item;
+      const { repo, mockSend } = makeRepoAndMock({});
+      await repo.save(failed);
+      const item = sentCmd(mockSend).input.Item;
       expect(item.status).toBe('FAILED');
       expect(item.failureReason).toBe('payment_declined');
     });
@@ -116,24 +133,25 @@ describe('DynamoOrderRepository', () => {
 
   describe('listAll', () => {
     it('sends QueryCommand on GSI1 with ORDERS partition key', async () => {
-      const client = makeClient({ Items: [] });
-      await new DynamoOrderRepository(client, TABLE).listAll();
-      const cmd = sentCmd(client);
+      const { repo, mockSend } = makeRepoAndMock({ Items: [] });
+      await repo.listAll();
+      const cmd = sentCmd(mockSend);
       expect(cmd).toBeInstanceOf(QueryCommand);
       expect(cmd.input.IndexName).toBe('GSI1');
-      expect(cmd.input.ExpressionAttributeValues[':pk']).toBe('ORDERS');
+      expect(Object.values(cmd.input.ExpressionAttributeValues)).toContain('ORDERS');
     });
 
     it('returns empty array when Items is empty', async () => {
-      const result = await new DynamoOrderRepository(makeClient({ Items: [] }), TABLE).listAll();
+      const { repo } = makeRepoAndMock({ Items: [] });
+      const result = await repo.listAll();
       expect(result).toEqual([]);
     });
 
     it('maps all Items to Orders', async () => {
       const o1 = makeOrder();
       const o2 = makeOrder();
-      const client = makeClient({ Items: [toItem(o1), toItem(o2)] });
-      const all = await new DynamoOrderRepository(client, TABLE).listAll();
+      const { repo } = makeRepoAndMock({ Items: [toRawItem(o1), toRawItem(o2)] });
+      const all = await repo.listAll();
       expect(all).toHaveLength(2);
       expect(all.map((o) => o.id)).toContain(o1.id);
       expect(all.map((o) => o.id)).toContain(o2.id);

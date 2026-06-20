@@ -39,7 +39,7 @@ flowchart LR
   Client[Client / web] -->|Bearer JWT| APIGW[API Gateway HTTP API]
   APIGW --> ApiLambda[orders-api Lambda - Hono]
   ApiLambda -->|GetItem / Query / PutItem| DDB[(DynamoDB single table + GSI1)]
-  ApiLambda -->|SendMessage ProcessOrder| SQS[[SQS orders-processing]]
+  ApiLambda -->|SendMessage ProcessOrder| SQS[[SQS orders-queue]]
   SQS -->|event source mapping| WorkerLambda[orders-worker Lambda]
   WorkerLambda -->|state transitions + audit writes| DDB
   SQS -. maxReceiveCount .-> DLQ[[SQS DLQ]]
@@ -140,11 +140,11 @@ index at [`docs/adr/README.md`](./adr/README.md). Summary:
 
 **Value objects**
 
-- `OrderId` — UUID; `create()` / `from(string)`.
-- `CustomerId` — non-empty string.
+- `OrderId` — UUID wrapper; `generate(idGen)` / `from(string)`.
 - `Money` — `{ amount: number; currency: string }`; rejects non-positive amounts and
-  non-ISO-4217 currencies.
-- `OrderStatus` — `PENDING | PROCESSING | COMPLETED | FAILED` + transition guard.
+  non-3-letter-uppercase currencies.
+- `OrderStatus` — `'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'` (type alias; transition
+  guards live on the `Order` aggregate methods).
 
 **Aggregate `Order`**
 
@@ -188,7 +188,7 @@ stateDiagram-v2
   `RecordAuditEntryHandler(null→PENDING, ORDER_CREATED)`, then **publish `ProcessOrderMessage`**
   via `MessagePublisherPort` (explicit orchestration — no event-bus saga). Returns created `Order`.
 - `ProcessOrderHandler`:
-  1. `repo.findById`; **idempotency guard** — no-op if not `PENDING`.
+  1. `repo.findById`; throws `InvalidStateTransitionError` if not `PENDING` (→ HTTP 409).
   2. `order.startProcessing()` → audit `ORDER_PROCESSING_STARTED` → save.
   3. `const result = await paymentGateway.authorize(order)`.
   4. If `result.approved` → `order.complete()` → audit `ORDER_COMPLETED` → save.
@@ -248,7 +248,7 @@ invocations); routes in §6; bearer middleware; maps domain errors to HTTP codes
 
 | HU                    | Endpoint / mechanism                    | Command/Query → Handler                                                                                    | Persistence           | HTTP codes            |
 | --------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------- | --------------------- |
-| Registrar orden       | `POST /orders`                          | `CreateOrderCommand` → `CreateOrderHandler` (`PENDING`, validation, audit `ORDER_CREATED`)                 | PutItem order + audit | 201 / 400 / 401       |
+| Registrar orden       | `POST /orders`                          | `CreateOrderCommand` → `CreateOrderHandler` (`PENDING`, validation, audit `ORDER_CREATED`)                 | PutItem order + audit | 201 / 422 / 401       |
 | Consultar orden       | `GET /orders/:id` (+ `/audit`)          | `GetOrderQuery` → `GetOrderHandler`                                                                        | GetItem / Query       | 200 / 401 / 404       |
 | Procesar orden        | `POST /orders/:id/process` + SQS worker | publish → `ProcessOrderCommand` → `ProcessOrderHandler` (state machine, idempotent, gateway-driven FAILED) | PutItem + audit       | 202 / 401 / 404 / 409 |
 | Registrar auditoría   | implicit on every transition            | `RecordAuditEntryCommand` → `RecordAuditEntryHandler`                                                      | PutItem audit         | n/a                   |
@@ -267,7 +267,7 @@ invocations); routes in §6; bearer middleware; maps domain errors to HTTP codes
 | GET    | `/health`             | none   | —                                  | `200 { status: "ok" }`                                        |
 
 Error envelope: `{ error: { code, message } }`. `InvalidStateTransitionError → 409`,
-`OrderNotFoundError → 404`, validation → `400`, auth → `401`.
+`OrderNotFoundError → 404`, validation → `422`, auth → `401`.
 
 ---
 
@@ -286,10 +286,12 @@ enables "list all" without a scan; see §9 for the hot-partition caveat at scale
 
 ## 8. Local development & Docker
 
-`docker compose` services: `dynamodb-local`, optional `dynamodb-admin`, and the **combined
-local app** (Hono + worker poll-loop in one process sharing the in-memory queue, ADR-0010).
-A bootstrap script creates the table + GSI1. `pnpm token` mints a demo JWT. README documents
-the create → process → query → audit walkthrough.
+`docker compose` services: **floci** (local AWS emulator at `:4566`), **floci-ui** (browser
+DynamoDB + SQS inspector at `:4500`), a one-shot bootstrap container that creates the table +
+GSI1 + SQS queue, `orders-api`, and `orders-worker` (all with real SQS/DynamoDB adapters via
+`.env.docker`). A pre-signed demo JWT is included in `.env.example` — no extra step needed.
+Option B runs the **combined local runtime** (Hono + worker poll-loop in one process sharing
+the in-memory queue, ADR-0010). README documents the full walkthrough.
 
 ---
 
@@ -339,7 +341,9 @@ horizontally with reserved/limited concurrency to protect downstreams. Known bot
 
 - **`api-docs`** — `openapi.json` from `contracts` (Zod → `zod-to-openapi`), rendered with Scalar.
 - **`iac`** — AWS CDK stack: DynamoDB + GSI1, SQS + DLQ, `orders-api` Lambda + HTTP API,
-  `orders-worker` Lambda + SQS event source mapping, IAM, secret reference.
+  `orders-worker` Lambda + SQS event source mapping, `api-docs` Lambda + HTTP API,
+  S3 bucket + CloudFront distribution for the Astro frontend (with URL-rewrite Function),
+  explicit CloudWatch LogGroups per Lambda, IAM least-privilege grants.
 - **`web`** — Astro + Tailwind + DaisyUI, public, three pages:
   1. `/` — landing, two buttons: _Customer_ / _Backoffice_.
   2. `/customer` — create an order; look up an order by id (status + timestamps).
