@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+!.env.docker
+node_modules
+**/node_modules
+**/dist
+**/.turbo
+openspec
+docs
+apps/web
+apps/iac
+apps/api-docs
