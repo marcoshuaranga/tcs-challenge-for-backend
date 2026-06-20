@@ -54,6 +54,7 @@ export function makeApp(env: AppEnv) {
 
   app.get('/orders', async (c) => {
     const result = await orderService.listOrders();
+    if (!result.ok) return c.json({ error: 'Internal error' }, 500);
     return c.json(
       result.value.map((order) => ({
         id: order.id,
