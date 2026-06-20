@@ -67,6 +67,83 @@ describe('POST /orders', () => {
   });
 });
 
+describe('GET /orders/:id', () => {
+  it('without Bearer token returns 401', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET });
+    const res = await app.request('/orders/some-id');
+    expect(res.status).toBe(401);
+  });
+
+  it('with valid JWT and unknown id returns 404 with error envelope', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET });
+    const token = await makeToken();
+    const res = await app.request('/orders/nonexistent', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('ORDER_NOT_FOUND');
+  });
+
+  it('with valid JWT and known id returns 200 with OrderResponseDto', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET });
+    const token = await makeToken();
+    const id = await createPendingOrder(app, token);
+    const res = await app.request(`/orders/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      id: string;
+      status: string;
+      customerId: string;
+      amount: number;
+      currency: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    expect(body.id).toBe(id);
+    expect(body.status).toBe('PENDING');
+    expect(body.customerId).toBe('C1');
+    expect(body.amount).toBe(50);
+    expect(body.currency).toBe('USD');
+    expect(typeof body.createdAt).toBe('string');
+    expect(typeof body.updatedAt).toBe('string');
+  });
+});
+
+describe('GET /orders/:id/audit', () => {
+  it('without Bearer token returns 401', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET });
+    const res = await app.request('/orders/some-id/audit');
+    expect(res.status).toBe(401);
+  });
+
+  it('with valid JWT and unknown id returns 404 with error envelope', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET });
+    const token = await makeToken();
+    const res = await app.request('/orders/nonexistent/audit', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('ORDER_NOT_FOUND');
+  });
+
+  it('with valid JWT and known order returns 200 with audit array', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET });
+    const token = await makeToken();
+    const id = await createPendingOrder(app, token);
+    const res = await app.request(`/orders/${id}/audit`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as unknown[];
+    expect(Array.isArray(body)).toBe(true);
+    expect(body.length).toBeGreaterThan(0);
+  });
+});
+
 describe('POST /orders/:id/process', () => {
   it('without Bearer token returns 401', async () => {
     const app = makeApp({ JWT_SECRET: TEST_SECRET });

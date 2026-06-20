@@ -52,6 +52,41 @@ export function makeApp(env: AppEnv) {
     },
   );
 
+  app.get('/orders/:id/audit', async (c) => {
+    const id = c.req.param('id');
+    const result = await orderService.getOrderAudit(id);
+    if (result.ok) {
+      return c.json(result.value);
+    }
+    const error = result.error;
+    if (error instanceof OrderNotFoundError) {
+      return c.json({ error: { code: error.code, message: error.message } }, 404);
+    }
+    return c.json({ error: 'Internal error' }, 500);
+  });
+
+  app.get('/orders/:id', async (c) => {
+    const id = c.req.param('id');
+    const result = await orderService.getOrder(id);
+    if (result.ok) {
+      const order = result.value;
+      return c.json({
+        id: order.id,
+        status: order.status,
+        customerId: order.customerId,
+        amount: order.money.amount,
+        currency: order.money.currency,
+        createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
+      });
+    }
+    const error = result.error;
+    if (error instanceof OrderNotFoundError) {
+      return c.json({ error: { code: error.code, message: error.message } }, 404);
+    }
+    return c.json({ error: 'Internal error' }, 500);
+  });
+
   app.post('/orders/:id/process', async (c) => {
     const id = c.req.param('id');
     const result = await orderService.processOrder(id);
