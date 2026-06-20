@@ -54,17 +54,17 @@
       order fields or "Order not found"
 - [x] 5.2 Verify dev server: create form and status lookup work end-to-end
 - [x] 5.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
-- [ ] 5.4 Commit: `feat(web): Customer page — create order + status lookup`
+- [x] 5.4 Commit: `feat(web): Customer page — create order + status lookup`
 
 ## 6. apps/web — Backoffice page
 
-- [ ] 6.1 Implement `apps/web/src/pages/backoffice.astro`: on load calls
+- [x] 6.1 Implement `apps/web/src/pages/backoffice.astro`: on load calls
       `GET /orders` with `Authorization: Bearer <DEMO_JWT>`; renders DaisyUI
       table (`id`, `status`, `customerId`, `amount`, `currency`, `createdAt`);
       empty-state message when `[]`; error message on non-2xx
-- [ ] 6.2 Verify dev server: table populates when orders exist; empty-state shown
+- [x] 6.2 Verify dev server: table populates when orders exist; empty-state shown
       when none
-- [ ] 6.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
+- [x] 6.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
 - [ ] 6.4 Commit: `feat(web): Backoffice page — orders table`
 
 ## 7. Quality gate
