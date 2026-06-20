@@ -56,4 +56,13 @@ describe('composeOrders', () => {
       expect(result.error).toBeInstanceOf(OrderNotFoundError);
     }
   });
+
+  it('listOrders returns ok([]) on an empty store', async () => {
+    const svc = composeOrders({});
+    const result = await svc.listOrders();
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toEqual([]);
+    }
+  });
 });
