@@ -11,6 +11,7 @@ import { ProcessOrderHandler } from '../../src/application/process-order-handler
 import { RecordAuditEntryHandler } from '../../src/application/record-audit-entry-handler';
 import { GetOrderHandler } from '../../src/application/get-order-handler';
 import { GetOrderAuditHandler } from '../../src/application/get-order-audit-handler';
+import { ListOrdersHandler } from '../../src/application/list-orders-handler';
 import { InMemoryOrderRepository } from '../../src/infrastructure/in-memory-order-repository';
 import { InMemoryAuditRepository } from '../../src/infrastructure/in-memory-audit-repository';
 import { InMemoryMessagePublisher } from '../../src/infrastructure/in-memory-message-publisher';
@@ -32,12 +33,14 @@ function makeService() {
     auditHandler,
     new FakePaymentGateway(Infinity),
   );
+  const listOrdersHandler = new ListOrdersHandler(orderRepo);
   const getOrderHandler = new GetOrderHandler(orderRepo);
   const getOrderAuditHandler = new GetOrderAuditHandler(orderRepo, auditRepo);
   return new OrderAppService(
     createHandler,
     processHandler,
     orderRepo,
+    listOrdersHandler,
     getOrderHandler,
     getOrderAuditHandler,
   );

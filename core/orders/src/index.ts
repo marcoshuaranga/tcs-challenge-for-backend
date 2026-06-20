@@ -1,5 +1,8 @@
 import { UuidGenerator, SystemClock } from '@tcs-challenge-for-backend/kernel';
 import { CreateOrderHandler } from './application/create-order-handler';
+import { GetOrderAuditHandler } from './application/get-order-audit-handler';
+import { GetOrderHandler } from './application/get-order-handler';
+import { ListOrdersHandler } from './application/list-orders-handler';
 import { OrderAppService } from './application/order-app-service';
 import { ProcessOrderHandler } from './application/process-order-handler';
 import { RecordAuditEntryHandler } from './application/record-audit-entry-handler';
@@ -40,8 +43,18 @@ export function composeOrders(env: Env): OrderAppService {
     auditHandler,
     new FakePaymentGateway(failAboveAmount),
   );
+  const listOrdersHandler = new ListOrdersHandler(orderRepo);
+  const getOrderHandler = new GetOrderHandler(orderRepo);
+  const getOrderAuditHandler = new GetOrderAuditHandler(orderRepo, auditRepo);
 
-  return new OrderAppService(createHandler, processHandler, orderRepo);
+  return new OrderAppService(
+    createHandler,
+    processHandler,
+    orderRepo,
+    listOrdersHandler,
+    getOrderHandler,
+    getOrderAuditHandler,
+  );
 }
 
 export { OrderAppService } from './application/order-app-service';

@@ -38,4 +38,22 @@ describe('composeOrders', () => {
   it('throws if USE_AWS_SQS is set to "true"', () => {
     expect(() => composeOrders({ USE_AWS_SQS: 'true' })).toThrow('not implemented');
   });
+
+  it('getOrder returns err(OrderNotFoundError) for unknown id', async () => {
+    const svc = composeOrders({});
+    const result = await svc.getOrder('nonexistent');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(OrderNotFoundError);
+    }
+  });
+
+  it('getOrderAudit returns err(OrderNotFoundError) for unknown id', async () => {
+    const svc = composeOrders({});
+    const result = await svc.getOrderAudit('nonexistent');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(OrderNotFoundError);
+    }
+  });
 });
