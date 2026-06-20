@@ -1,4 +1,4 @@
 import { handle } from 'hono/aws-lambda';
 import { makeDocsApp } from './app';
 
-export const handler = handle(makeDocsApp());
+export const handler = handle(makeDocsApp(process.env['API_URL']));
