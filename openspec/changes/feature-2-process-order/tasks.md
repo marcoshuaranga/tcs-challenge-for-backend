@@ -37,35 +37,35 @@
 
 ## 4. Infrastructure — commit
 
-- [ ] 4.1 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `core/orders` — fix all violations
-- [ ] 4.2 Commit: `feat(infra): FakePaymentGateway, InMemoryMessagePublisher.drain`
+- [x] 4.1 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `core/orders` — fix all violations
+- [x] 4.2 Commit: `feat(infra): FakePaymentGateway, InMemoryMessagePublisher.drain`
 
 ## 5. Application — ProcessOrderHandler (TDD)
 
-- [ ] 5.1 Write failing tests in `core/orders/test/application/process-order-handler.test.ts`:
+- [x] 5.1 Write failing tests in `core/orders/test/application/process-order-handler.test.ts`:
       — happy path: gateway approves → order COMPLETED, 2 audit entries (ORDER_PROCESSING_STARTED, ORDER_COMPLETED), order saved twice;
       — declined path: gateway declines → order FAILED with reason 'payment_declined', 2 audit entries (ORDER_PROCESSING_STARTED, ORDER_FAILED);
       — idempotent PROCESSING: handler returns, no save, no audit, no gateway call;
       — idempotent COMPLETED: same no-op behaviour;
       — not found: missing orderId → throws OrderNotFoundError
-- [ ] 5.2 Implement `ProcessOrderHandler` in
+- [x] 5.2 Implement `ProcessOrderHandler` in
       `core/orders/src/application/process-order-handler.ts`
-- [ ] 5.3 Verify all ProcessOrderHandler tests pass (green)
+- [x] 5.3 Verify all ProcessOrderHandler tests pass (green)
 
 ## 6. Application — OrderAppService.processOrder (TDD)
 
-- [ ] 6.1 Write failing tests in `core/orders/test/application/order-app-service.test.ts`
+- [x] 6.1 Write failing tests in `core/orders/test/application/order-app-service.test.ts`
       (extend existing file):
       — `processOrder(orderId)` returns `ok(undefined)` for valid PENDING order;
       — `processOrder('nonexistent')` returns `err(OrderNotFoundError)`
-- [ ] 6.2 Add `processOrder(orderId: string): Promise<Result<void, AppError>>` to
+- [x] 6.2 Add `processOrder(orderId: string): Promise<Result<void, AppError>>` to
       `OrderAppService` in `core/orders/src/application/order-app-service.ts`
-- [ ] 6.3 Verify OrderAppService tests pass (green)
+- [x] 6.3 Verify OrderAppService tests pass (green)
 
 ## 7. Application — commit
 
-- [ ] 7.1 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `core/orders` — fix all violations
-- [ ] 7.2 Commit: `feat(application): ProcessOrderHandler, PaymentGatewayPort, processOrder facade`
+- [x] 7.1 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `core/orders` — fix all violations
+- [x] 7.2 Commit: `feat(application): ProcessOrderHandler, PaymentGatewayPort, processOrder facade`
 
 ## 8. Composition root — extend composeOrders (TDD)
 
