@@ -11,4 +11,5 @@ autoInstallPeers: true
 
 allowBuilds:
   esbuild: true
+  sharp: true
   unrs-resolver: false
