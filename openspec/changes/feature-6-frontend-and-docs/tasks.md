@@ -42,18 +42,18 @@
       DaisyUI card links to `/customer`, `/backoffice`, and `PUBLIC_API_DOCS_URL`
 - [x] 4.2 Verify dev server shows landing page with all three links
 - [x] 4.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
-- [ ] 4.4 Commit: `feat(web): Landing page`
+- [x] 4.4 Commit: `feat(web): Landing page`
 
 ## 5. apps/web — Customer page
 
-- [ ] 5.1 Implement `apps/web/src/pages/customer.astro`:
+- [x] 5.1 Implement `apps/web/src/pages/customer.astro`:
       — DaisyUI form (`customerId`, `amount`, `currency`); on submit calls
       `POST /orders` with `Authorization: Bearer <DEMO_JWT>`; displays
       returned `id` and `status` or error message;
       — DaisyUI input for order id; on submit calls `GET /orders/:id`; displays
       order fields or "Order not found"
-- [ ] 5.2 Verify dev server: create form and status lookup work end-to-end
-- [ ] 5.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
+- [x] 5.2 Verify dev server: create form and status lookup work end-to-end
+- [x] 5.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
 - [ ] 5.4 Commit: `feat(web): Customer page — create order + status lookup`
 
 ## 6. apps/web — Backoffice page
