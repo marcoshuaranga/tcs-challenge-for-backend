@@ -53,42 +53,51 @@
 ## 5. apps/iac — orders-api Lambda + API Gateway (TDD)
 
 - [ ] 5.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
+      — stack has an `AWS::Logs::LogGroup` for orders-api with `RetentionInDays: 7`
+      and `DeletionPolicy: Delete`;
       — stack has an `AWS::Lambda::Function` with env vars `ORDERS_TABLE`,
       `USE_AWS_DYNAMO`, `JWT_SECRET`, `FAIL_ABOVE_AMOUNT`;
       — that Lambda has a DynamoDB IAM policy scoped to the table ARN;
       — stack has an `AWS::ApiGatewayV2::Api` and an
       `AWS::ApiGatewayV2::Integration` pointing at the orders-api Lambda
-- [ ] 5.2 Add `orders-api` Lambda (`NodejsFunction` pointing at
+- [ ] 5.2 Add explicit `logs.LogGroup` for orders-api:
+      `retention: RetentionDays.ONE_WEEK`, `removalPolicy: DESTROY`
+- [ ] 5.3 Add `orders-api` Lambda (`NodejsFunction` pointing at
       `apps/orders-api/src/lambda.ts`); set env vars: `ORDERS_TABLE`,
       `JWT_SECRET` (from `process.env.JWT_SECRET`), `FAIL_ABOVE_AMOUNT`,
-      `USE_AWS_DYNAMO=true`, `AWS_REGION`;
+      `USE_AWS_DYNAMO=true`, `AWS_REGION`; wire `logGroup` prop to the managed log group;
       grant `table.grantReadWriteData(ordersApiLambda)`
-- [ ] 5.3 Add `HttpApi` with `HttpLambdaIntegration` routing `ANY /{proxy+}` to
+- [ ] 5.4 Add `HttpApi` with `HttpLambdaIntegration` routing `ANY /{proxy+}` to
       `orders-api` Lambda; export API URL as `CfnOutput`
-- [ ] 5.4 Verify CDK assertion tests pass (green)
-- [ ] 5.5 Run `pnpm --filter iac cdk synth` — template valid
-- [ ] 5.6 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
-- [ ] 5.7 Commit: `feat(iac): orders-api Lambda + API Gateway`
+- [ ] 5.5 Verify CDK assertion tests pass (green)
+- [ ] 5.6 Run `pnpm --filter iac cdk synth` — template valid
+- [ ] 5.7 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
+- [ ] 5.8 Commit: `feat(iac): orders-api Lambda + API Gateway`
 
 ## 6. apps/iac — orders-worker Lambda + SQS event source (TDD)
 
 - [ ] 6.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
+      — stack has an `AWS::Logs::LogGroup` for orders-worker with `RetentionInDays: 7`
+      and `DeletionPolicy: Delete`;
       — stack has a second `AWS::Lambda::Function` with env vars `ORDERS_TABLE`,
       `QUEUE_URL`, `USE_AWS_DYNAMO`, `USE_AWS_SQS`;
       — that Lambda has an `AWS::Lambda::EventSourceMapping` with `BatchSize: 1`
       pointing at the main SQS queue
-- [ ] 6.2 Add `orders-worker` Lambda (`NodejsFunction` pointing at
+- [ ] 6.2 Add explicit `logs.LogGroup` for orders-worker:
+      `retention: RetentionDays.ONE_WEEK`, `removalPolicy: DESTROY`
+- [ ] 6.3 Add `orders-worker` Lambda (`NodejsFunction` pointing at
       `apps/orders-worker/src/lambda-handler.ts`); set env vars: `ORDERS_TABLE`,
       `QUEUE_URL` (from `queue.queueUrl`), `FAIL_ABOVE_AMOUNT`,
-      `USE_AWS_DYNAMO=true`, `USE_AWS_SQS=true`, `AWS_REGION`;
+      `USE_AWS_DYNAMO=true`, `USE_AWS_SQS=true`, `AWS_REGION`; wire `logGroup` prop
+      to the managed log group;
       grant `table.grantReadWriteData(ordersWorkerLambda)` and
       `queue.grantConsumeMessages(ordersWorkerLambda)`
-- [ ] 6.3 Add SQS event source:
+- [ ] 6.4 Add SQS event source:
       `ordersWorkerLambda.addEventSource(new SqsEventSource(queue, { batchSize: 1 }))`
-- [ ] 6.4 Verify CDK assertion tests pass (green)
-- [ ] 6.5 Run `pnpm --filter iac cdk synth` — template valid
-- [ ] 6.6 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
-- [ ] 6.7 Commit: `feat(iac): orders-worker Lambda + SQS event source mapping`
+- [ ] 6.5 Verify CDK assertion tests pass (green)
+- [ ] 6.6 Run `pnpm --filter iac cdk synth` — template valid
+- [ ] 6.7 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
+- [ ] 6.8 Commit: `feat(iac): orders-worker Lambda + SQS event source mapping`
 
 ## 7. Quality gate
 

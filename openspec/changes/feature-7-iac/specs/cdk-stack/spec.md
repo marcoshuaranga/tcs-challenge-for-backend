@@ -29,6 +29,19 @@ The CDK stack SHALL define an SQS queue with a dead-letter queue.
 
 ---
 
+### Requirement: CloudWatch Log Groups
+The CDK stack SHALL define an explicit `logs.LogGroup` for each Lambda function:
+- `removalPolicy: DESTROY` — deleted on `cdk destroy` (prevents orphaned log groups).
+- `retention: RetentionDays.ONE_WEEK` — logs expire after 7 days.
+- Each Lambda references its log group via the `logGroup` prop so it does not auto-create one.
+
+#### Scenario: Stack synthesises with managed log groups
+- **WHEN** `cdk synth` is run
+- **THEN** the template contains two `AWS::Logs::LogGroup` resources, each with
+  `RetentionInDays: 7` and `DeletionPolicy: Delete`
+
+---
+
 ### Requirement: orders-api Lambda
 The CDK stack SHALL define a Node.js Lambda function for `orders-api`:
 - Code bundled from `apps/orders-api/` (esbuild via `NodejsFunction` or `lambda.Code.fromAsset`).
@@ -36,6 +49,7 @@ The CDK stack SHALL define a Node.js Lambda function for `orders-api`:
   `AWS_REGION`.
 - IAM: DynamoDB `GetItem`, `PutItem`, `Query` on the orders table ARN; no SQS permissions.
 - Handler: the Hono `hono/aws-lambda` handler export.
+- Uses the explicitly-managed `LogGroup` for orders-api (no auto-created log group).
 
 #### Scenario: Stack synthesises with orders-api Lambda
 - **WHEN** `cdk synth` is run
@@ -52,6 +66,7 @@ The CDK stack SHALL define a Node.js Lambda function for `orders-worker`:
 - IAM: DynamoDB `GetItem`, `PutItem`, `Query` + SQS `ReceiveMessage`, `DeleteMessage`,
   `GetQueueAttributes` on the respective ARNs.
 - SQS event source mapping: triggers on the main queue with `batchSize: 1`.
+- Uses the explicitly-managed `LogGroup` for orders-worker (no auto-created log group).
 
 #### Scenario: Stack synthesises with orders-worker Lambda and SQS event source
 - **WHEN** `cdk synth` is run

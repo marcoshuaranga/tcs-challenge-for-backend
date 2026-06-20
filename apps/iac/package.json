@@ -1,23 +1,27 @@
 {
-  "name": "iac",
+  "name": "@tcs-challenge-for-backend/iac",
   "version": "0.1.0",
-  "packageManager": "pnpm@11.8.0",
+  "private": true,
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "cdk": "cdk"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "cdk": "cdk",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy"
   },
   "devDependencies": {
-    "@types/jest": "^30",
     "@types/node": "^24.13.2",
-    "jest": "^30.4.2",
-    "ts-jest": "^29.4.11",
+    "vitest": "^4.1.9",
     "aws-cdk": "2.1128.0",
     "ts-node": "^10.9.2",
     "typescript": "~6.0.3"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.260.0",
-    "constructs": "^10.6.0"
+    "constructs": "^10.6.0",
+    "esbuild": "^0.25.0"
   }
 }

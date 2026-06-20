@@ -33,13 +33,28 @@ so no hardcoded values exist outside the CDK definition.
 
 ## Decisions
 
-### DESTROY removal policy on DynamoDB and SQS
+### DESTROY removal policy on all managed resources
 
-Both resources use `RemovalPolicy.DESTROY` so `cdk destroy` cleans up completely.
-For a demo/challenge context this is correct behaviour — no orphaned tables after teardown.
+DynamoDB, SQS, and explicitly-managed CloudWatch Log Groups all use
+`RemovalPolicy.DESTROY` so `cdk destroy` cleans up completely.
+For a demo/challenge context this is correct behaviour — no orphaned resources after teardown.
 
 Alternative: `RETAIN` policy. Rejected — would require manual cleanup after the demo;
 DESTROY is explicit about the demo scope.
+
+### Explicit CloudWatch Log Groups for Lambdas
+
+Lambda auto-creates `/aws/lambda/<name>` log groups **outside** CloudFormation's control,
+so they are never deleted by `cdk destroy`. To prevent orphaned log groups after teardown,
+both Lambdas define an explicit `logs.LogGroup` construct with:
+
+- `removalPolicy: DESTROY` — deleted on `cdk destroy`
+- `retention: RetentionDays.ONE_WEEK` — logs expire after 7 days (appropriate for a demo)
+- `logGroup` prop wired to the Lambda so it uses the managed group instead of auto-creating one
+
+Alternative: `logRetention` prop on `NodejsFunction`. Rejected — internally deploys a
+helper Lambda with its own unmanaged log group, adding the same problem recursively. The
+explicit `LogGroup` construct is cleaner and fully controlled by the stack.
 
 ### API Gateway HTTP API (not REST API)
 
