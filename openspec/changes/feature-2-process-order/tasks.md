@@ -133,7 +133,7 @@
 
 ## 15. Quality gate
 
-- [ ] 15.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
-- [ ] 15.2 Run `pnpm run test` across workspace — all tests green
+- [x] 15.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
+- [x] 15.2 Run `pnpm run test` across workspace — all tests green
 - [ ] 15.3 Run `/code-review` on the full change
 - [ ] 15.4 Archive this change with `/opsx:archive`
