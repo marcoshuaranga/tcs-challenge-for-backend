@@ -32,8 +32,9 @@ It SHALL have no side effects (no saves, no audit writes, no messages published)
 
 ### Requirement: OrderAppService.listOrders
 The system SHALL expose
-`OrderAppService.listOrders(): Promise<Result<Order[], never>>`
-that delegates to `ListOrdersHandler` and always returns `ok(orders)`.
+`OrderAppService.listOrders(): Promise<Result<Order[], AppError>>`
+that delegates to `ListOrdersHandler`, returning `ok(orders)` on success
+or `err(AppError)` if the repository throws.
 
 #### Scenario: Returns ok with all orders
 - **WHEN** `appService.listOrders()` is called and orders exist
