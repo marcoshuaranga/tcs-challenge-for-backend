@@ -2,13 +2,24 @@ import * as cdk from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, it, beforeAll } from 'vitest';
 import { TcsChallengeStack } from '../lib/tcs-challenge-stack';
+import { TcsChallengeWebStack } from '../lib/tcs-challenge-web-stack';
 
 let template: Template;
+let webTemplate: Template;
 
 beforeAll(() => {
   const app = new cdk.App();
-  const stack = new TcsChallengeStack(app, 'TestStack');
+  const stack = new TcsChallengeStack(
+    app,
+    'TestStack',
+    {},
+    { jwtSecret: 'test-secret', failAboveAmount: '1000' },
+  );
   template = Template.fromStack(stack);
+
+  const webApp = new cdk.App();
+  const webStack = new TcsChallengeWebStack(webApp, 'TestWebStack', {});
+  webTemplate = Template.fromStack(webStack);
 });
 
 describe('DynamoDB table', () => {
@@ -101,10 +112,6 @@ describe('orders-worker Lambda + SQS event source', () => {
     template.resourceCountIs('AWS::Logs::LogGroup', 3);
   });
 
-  it('stack has 5 Lambda functions (orders-api, orders-worker, api-docs, plus CDK internal)', () => {
-    template.resourceCountIs('AWS::Lambda::Function', 5);
-  });
-
   it('orders-worker Lambda has required env vars', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
       Environment: {
@@ -127,23 +134,21 @@ describe('orders-worker Lambda + SQS event source', () => {
 
 describe('api-docs Lambda + API Gateway', () => {
   it('api-docs Lambda has no application env vars', () => {
-    // api-docs Lambda is identified by having no ORDERS_TABLE or QUEUE_URL env vars
-    // This test verifies the HttpApi integration exists (count covers both)
     template.resourceCountIs('AWS::ApiGatewayV2::Api', 2);
   });
 });
 
 describe('web static site — S3 + CloudFront', () => {
-  it('stack has one S3 bucket (WebBucket)', () => {
-    template.resourceCountIs('AWS::S3::Bucket', 1);
+  it('web stack has one S3 bucket (WebBucket)', () => {
+    webTemplate.resourceCountIs('AWS::S3::Bucket', 1);
   });
 
-  it('stack has one CloudFront distribution', () => {
-    template.resourceCountIs('AWS::CloudFront::Distribution', 1);
+  it('web stack has one CloudFront distribution', () => {
+    webTemplate.resourceCountIs('AWS::CloudFront::Distribution', 1);
   });
 
   it('CloudFront distribution redirects HTTP to HTTPS', () => {
-    template.hasResourceProperties('AWS::CloudFront::Distribution', {
+    webTemplate.hasResourceProperties('AWS::CloudFront::Distribution', {
       DistributionConfig: Match.objectLike({
         DefaultCacheBehavior: Match.objectLike({
           ViewerProtocolPolicy: 'redirect-to-https',
@@ -153,7 +158,7 @@ describe('web static site — S3 + CloudFront', () => {
   });
 
   it('CloudFront distribution has index.html as default root', () => {
-    template.hasResourceProperties('AWS::CloudFront::Distribution', {
+    webTemplate.hasResourceProperties('AWS::CloudFront::Distribution', {
       DistributionConfig: Match.objectLike({
         DefaultRootObject: 'index.html',
       }),

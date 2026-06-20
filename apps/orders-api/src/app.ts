@@ -131,7 +131,7 @@ export function makeApp(env: AppEnv) {
     const id = c.req.param('id');
     const result = await orderService.processOrder(id);
     if (result.ok) {
-      return c.json({ id, status: 'PENDING' }, 202);
+      return c.json({ id, status: result.value.status }, 202);
     }
     const error = result.error;
     if (error instanceof OrderNotFoundError) {

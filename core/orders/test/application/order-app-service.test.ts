@@ -75,7 +75,7 @@ describe('OrderAppService', () => {
     const result = await svc.processOrder(registered.value.id);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value).toBeUndefined();
+      expect(result.value.status).toBe('COMPLETED');
     }
   });
 

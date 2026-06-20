@@ -1,5 +1,6 @@
 import { OrderNotFoundError, InvalidStateTransitionError } from '@tcs-challenge-for-backend/kernel';
 import type { ClockPort } from '@tcs-challenge-for-backend/kernel';
+import type { Order } from '../domain/order';
 import type { OrderRepositoryPort, PaymentGatewayPort } from './ports';
 import type { RecordAuditEntryHandler } from './record-audit-entry-handler';
 
@@ -11,7 +12,7 @@ export class ProcessOrderHandler {
     private readonly gateway: PaymentGatewayPort,
   ) {}
 
-  async execute(orderId: string): Promise<void> {
+  async execute(orderId: string): Promise<Order> {
     const order = await this.orderRepo.findById(orderId);
     if (!order) throw new OrderNotFoundError(orderId);
 
@@ -39,6 +40,7 @@ export class ProcessOrderHandler {
         newState: 'COMPLETED',
         timestamp: completed.updatedAt,
       });
+      return completed;
     } else {
       const failed = processing.fail('payment_declined', this.clock);
       await this.orderRepo.save(failed);
@@ -50,6 +52,7 @@ export class ProcessOrderHandler {
         timestamp: failed.updatedAt,
         reason: failed.failureReason,
       });
+      return failed;
     }
   }
 }

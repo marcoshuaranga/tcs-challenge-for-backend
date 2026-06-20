@@ -28,10 +28,10 @@ export class OrderAppService {
     }
   }
 
-  async processOrder(orderId: string): Promise<Result<void, AppError>> {
+  async processOrder(orderId: string): Promise<Result<Order, AppError>> {
     try {
-      await this.processOrderHandler.execute(orderId);
-      return ok(undefined);
+      const order = await this.processOrderHandler.execute(orderId);
+      return ok(order);
     } catch (e) {
       if (e instanceof AppError) return err(e);
       throw e;
