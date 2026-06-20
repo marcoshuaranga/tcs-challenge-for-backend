@@ -45,7 +45,14 @@ importers:
 
   core/kernel: {}
 
-  core/orders: {}
+  core/orders:
+    dependencies:
+      '@tcs-challenge-for-backend/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@tcs-challenge-for-backend/kernel':
+        specifier: workspace:*
+        version: link:../kernel
 
 packages:
 

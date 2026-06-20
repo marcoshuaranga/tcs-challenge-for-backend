@@ -8,6 +8,11 @@
     }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tcs-challenge-for-backend/contracts": "workspace:*",
+    "@tcs-challenge-for-backend/kernel": "workspace:*"
   }
 }
