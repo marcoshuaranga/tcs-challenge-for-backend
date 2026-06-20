@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { sValidator } from '@hono/standard-validator';
 import { CreateOrderSchema, type OrderResponseDto } from '@tcs-challenge-for-backend/contracts';
 import {
@@ -47,6 +48,27 @@ export function makeApp(env: AppEnv) {
 
   const app = new Hono();
 
+  app.use('*', cors());
+
+  app.get('/', (c) =>
+    c.json({
+      name: 'TCS Order Processing API',
+      version: '1.0.0',
+      endpoints: [
+        { method: 'GET', path: '/health', description: 'Health check' },
+        { method: 'POST', path: '/orders', description: 'Create an order (auth required)' },
+        { method: 'GET', path: '/orders', description: 'List all orders (auth required)' },
+        { method: 'GET', path: '/orders/:id', description: 'Get order by ID (auth required)' },
+        { method: 'GET', path: '/orders/:id/audit', description: 'Audit trail (auth required)' },
+        {
+          method: 'POST',
+          path: '/orders/:id/process',
+          description: 'Trigger processing (auth required)',
+        },
+      ],
+    }),
+  );
+
   app.get('/health', (c) => c.json({ status: 'ok' }));
 
   app.use('/orders/*', jwtAuth(env.JWT_SECRET));
@@ -74,7 +96,8 @@ export function makeApp(env: AppEnv) {
 
   app.get('/orders', async (c) => {
     const result = await orderService.listOrders();
-    if (!result.ok) return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
+    if (!result.ok)
+      return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
     return c.json(result.value.map(serializeOrder));
   });
 
