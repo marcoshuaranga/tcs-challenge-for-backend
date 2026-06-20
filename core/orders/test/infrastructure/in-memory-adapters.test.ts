@@ -74,4 +74,20 @@ describe('InMemoryMessagePublisher', () => {
     await pub.publishProcessOrder('order-2');
     expect(pub.published).toEqual(['order-1', 'order-2']);
   });
+
+  it('drain() returns all published orderIds and clears the queue', async () => {
+    const pub = new InMemoryMessagePublisher();
+    await pub.publishProcessOrder('order-1');
+    await pub.publishProcessOrder('order-2');
+    const drained = pub.drain();
+    expect(drained).toEqual(['order-1', 'order-2']);
+    expect(pub.published).toEqual([]);
+  });
+
+  it('second call to drain() returns empty array', async () => {
+    const pub = new InMemoryMessagePublisher();
+    await pub.publishProcessOrder('order-1');
+    pub.drain();
+    expect(pub.drain()).toEqual([]);
+  });
 });

@@ -13,3 +13,7 @@ export interface AuditRepositoryPort {
 export interface MessagePublisherPort {
   publishProcessOrder(orderId: string): Promise<void>;
 }
+
+export interface PaymentGatewayPort {
+  authorize(order: Order): Promise<{ approved: boolean }>;
+}

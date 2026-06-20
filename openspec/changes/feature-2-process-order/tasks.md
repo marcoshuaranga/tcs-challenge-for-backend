@@ -1,6 +1,6 @@
 ## 1. Domain — state machine transitions (TDD)
 
-- [ ] 1.1 Write failing tests in `core/orders/test/domain/order.test.ts` (extend existing file):
+- [x] 1.1 Write failing tests in `core/orders/test/domain/order.test.ts` (extend existing file):
       — `startProcessing()` on PENDING → status becomes PROCESSING, updatedAt updated;
       — `startProcessing()` on non-PENDING → throws InvalidStateTransitionError;
       — `complete()` on PROCESSING → status becomes COMPLETED;
@@ -9,31 +9,31 @@
       — `fail(...)` on non-PROCESSING → throws InvalidStateTransitionError;
       — `startProcessing()` on COMPLETED → throws InvalidStateTransitionError;
       — `startProcessing()` on FAILED → throws InvalidStateTransitionError
-- [ ] 1.2 Implement `Order.startProcessing(clock: ClockPort)`, `Order.complete(clock)`,
+- [x] 1.2 Implement `Order.startProcessing(clock: ClockPort)`, `Order.complete(clock)`,
       `Order.fail(reason: string, clock: ClockPort)` in `core/orders/src/domain/order.ts`
-- [ ] 1.3 Verify all state machine tests pass (green)
+- [x] 1.3 Verify all state machine tests pass (green)
 
 ## 2. Application — PaymentGatewayPort
 
-- [ ] 2.1 Add `PaymentGatewayPort` interface to `core/orders/src/application/ports.ts`:
+- [x] 2.1 Add `PaymentGatewayPort` interface to `core/orders/src/application/ports.ts`:
       `authorize(order: Order): Promise<{ approved: boolean }>`
-- [ ] 2.2 Export `PaymentGatewayPort` from `core/orders/src/application/index.ts`
+- [x] 2.2 Export `PaymentGatewayPort` from `core/orders/src/application/index.ts`
 
 ## 3. Infrastructure — FakePaymentGateway + InMemoryMessagePublisher.drain (TDD)
 
-- [ ] 3.1 Write failing tests in `core/orders/test/infrastructure/fake-payment-gateway.test.ts`:
+- [x] 3.1 Write failing tests in `core/orders/test/infrastructure/fake-payment-gateway.test.ts`:
       — amount ≤ FAIL_ABOVE_AMOUNT → `{ approved: true }`;
       — amount > FAIL_ABOVE_AMOUNT → `{ approved: false }`
-- [ ] 3.2 Implement `FakePaymentGateway` in
+- [x] 3.2 Implement `FakePaymentGateway` in
       `core/orders/src/infrastructure/fake-payment-gateway.ts`; constructor accepts
       `failAboveAmount: number`
-- [ ] 3.3 Export `FakePaymentGateway` from `core/orders/src/infrastructure/index.ts`
-- [ ] 3.4 Verify FakePaymentGateway tests pass (green)
-- [ ] 3.5 Write failing test in `core/orders/test/infrastructure/in-memory-adapters.test.ts`
+- [x] 3.3 Export `FakePaymentGateway` from `core/orders/src/infrastructure/index.ts`
+- [x] 3.4 Verify FakePaymentGateway tests pass (green)
+- [x] 3.5 Write failing test in `core/orders/test/infrastructure/in-memory-adapters.test.ts`
       (extend existing file): `drain()` returns all published orderIds and clears the queue;
       second call to `drain()` returns empty array
-- [ ] 3.6 Implement `drain(): string[]` on `InMemoryMessagePublisher`
-- [ ] 3.7 Verify drain test passes (green)
+- [x] 3.6 Implement `drain(): string[]` on `InMemoryMessagePublisher`
+- [x] 3.7 Verify drain test passes (green)
 
 ## 4. Infrastructure — commit
 

@@ -6,4 +6,8 @@ export class InMemoryMessagePublisher implements MessagePublisherPort {
   async publishProcessOrder(orderId: string): Promise<void> {
     this.published.push(orderId);
   }
+
+  drain(): string[] {
+    return this.published.splice(0);
+  }
 }
