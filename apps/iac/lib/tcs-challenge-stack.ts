@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaNodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
@@ -12,10 +13,22 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as path from 'path';
 import { Construct } from 'constructs';
+import { CustomResourceConfig } from 'aws-cdk-lib/custom-resources';
 
 export class TcsChallengeStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props: cdk.StackProps,
+    params: {
+      jwtSecret: string;
+      failAboveAmount: string;
+    },
+  ) {
     super(scope, id, props);
+
+    CustomResourceConfig.of(this).addLogRetentionLifetime(logs.RetentionDays.ONE_WEEK);
+    CustomResourceConfig.of(this).addRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 
     // DynamoDB table
     const table = new dynamodb.Table(this, 'OrdersTable', {
@@ -40,6 +53,7 @@ export class TcsChallengeStack extends cdk.Stack {
     });
 
     const queue = new sqs.Queue(this, 'OrdersQueue', {
+      visibilityTimeout: cdk.Duration.seconds(30),
       deadLetterQueue: { queue: dlq, maxReceiveCount: 3 },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
@@ -54,12 +68,15 @@ export class TcsChallengeStack extends cdk.Stack {
 
     const ordersApiLambda = new lambdaNodejs.NodejsFunction(this, 'OrdersApiLambda', {
       entry: path.join(__dirname, '../../orders-api/src/lambda.ts'),
+      runtime: lambda.Runtime.NODEJS_24_X,
+      memorySize: 256,
+      timeout: cdk.Duration.seconds(15),
       logGroup: ordersApiLogGroup,
       environment: {
         ORDERS_TABLE: table.tableName,
         QUEUE_URL: queue.queueUrl,
-        JWT_SECRET: process.env['JWT_SECRET'] ?? '',
-        FAIL_ABOVE_AMOUNT: process.env['FAIL_ABOVE_AMOUNT'] ?? '1000',
+        JWT_SECRET: params.jwtSecret,
+        FAIL_ABOVE_AMOUNT: params.failAboveAmount,
         USE_AWS_DYNAMO: 'true',
         USE_AWS_SQS: 'true',
         AWS_ACCOUNT_ID: this.account,
@@ -70,15 +87,28 @@ export class TcsChallengeStack extends cdk.Stack {
     queue.grantSendMessages(ordersApiLambda);
 
     // API Gateway HTTP API
-    const httpApi = new apigwv2.HttpApi(this, 'OrdersHttpApi');
+    const httpApi = new apigwv2.HttpApi(this, 'OrdersHttpApi', {
+      corsPreflight: {
+        allowOrigins: ['*'],
+        allowMethods: [
+          apigwv2.CorsHttpMethod.GET,
+          apigwv2.CorsHttpMethod.POST,
+          apigwv2.CorsHttpMethod.PUT,
+          apigwv2.CorsHttpMethod.DELETE,
+          apigwv2.CorsHttpMethod.OPTIONS,
+        ],
+        allowHeaders: ['content-type', 'authorization'],
+      },
+    });
+    const ordersApiIntegration = new apigwv2integrations.HttpLambdaIntegration(
+      'OrdersApiIntegration',
+      ordersApiLambda,
+    );
 
     httpApi.addRoutes({
       path: '/{proxy+}',
       methods: [apigwv2.HttpMethod.ANY],
-      integration: new apigwv2integrations.HttpLambdaIntegration(
-        'OrdersApiIntegration',
-        ordersApiLambda,
-      ),
+      integration: ordersApiIntegration,
     });
 
     new cdk.CfnOutput(this, 'OrdersApiUrl', { value: httpApi.url ?? '' });
@@ -91,11 +121,14 @@ export class TcsChallengeStack extends cdk.Stack {
 
     const ordersWorkerLambda = new lambdaNodejs.NodejsFunction(this, 'OrdersWorkerLambda', {
       entry: path.join(__dirname, '../../orders-worker/src/lambda-handler.ts'),
+      runtime: lambda.Runtime.NODEJS_24_X,
+      memorySize: 256,
+      timeout: cdk.Duration.seconds(15),
       logGroup: ordersWorkerLogGroup,
       environment: {
         ORDERS_TABLE: table.tableName,
         QUEUE_URL: queue.queueUrl,
-        FAIL_ABOVE_AMOUNT: process.env['FAIL_ABOVE_AMOUNT'] ?? '1000',
+        FAIL_ABOVE_AMOUNT: params.failAboveAmount,
         USE_AWS_DYNAMO: 'true',
         USE_AWS_SQS: 'true',
         AWS_ACCOUNT_ID: this.account,
@@ -117,6 +150,9 @@ export class TcsChallengeStack extends cdk.Stack {
 
     const apiDocsLambda = new lambdaNodejs.NodejsFunction(this, 'ApiDocsLambda', {
       entry: path.join(__dirname, '../../api-docs/src/lambda.ts'),
+      runtime: lambda.Runtime.NODEJS_24_X,
+      memorySize: 256,
+      timeout: cdk.Duration.seconds(15),
       logGroup: apiDocsLogGroup,
       environment: {
         API_URL: httpApi.url ?? '',
@@ -124,14 +160,15 @@ export class TcsChallengeStack extends cdk.Stack {
     });
 
     const apiDocsHttpApi = new apigwv2.HttpApi(this, 'ApiDocsHttpApi');
+    const apiDocsIntegration = new apigwv2integrations.HttpLambdaIntegration(
+      'ApiDocsIntegration',
+      apiDocsLambda,
+    );
 
     apiDocsHttpApi.addRoutes({
       path: '/{proxy+}',
       methods: [apigwv2.HttpMethod.ANY],
-      integration: new apigwv2integrations.HttpLambdaIntegration(
-        'ApiDocsIntegration',
-        apiDocsLambda,
-      ),
+      integration: apiDocsIntegration,
     });
 
     new cdk.CfnOutput(this, 'ApiDocsUrl', { value: apiDocsHttpApi.url ?? '' });
@@ -140,25 +177,27 @@ export class TcsChallengeStack extends cdk.Stack {
     const webBucket = new s3.Bucket(this, 'WebBucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
     });
 
-    // Rewrite /foo and /foo/ to /foo/index.html so Astro's directory-based
-    // output works correctly. CloudFront's defaultRootObject only handles /.
-    const urlRewriteFn = new cloudfront.Function(this, 'UrlRewriteFn', {
-      code: cloudfront.FunctionCode.fromInline(`
-function handler(event) {
-  var request = event.request;
-  var uri = request.uri;
-  if (uri.endsWith('/')) {
-    request.uri = uri + 'index.html';
-  } else if (!uri.includes('.')) {
-    request.uri = uri + '/index.html';
-  }
-  return request;
-}
-      `),
-      runtime: cloudfront.FunctionRuntime.JS_2_0,
-    });
+    /**
+     * CloudFront Function code to rewrite URLs for Astro's "directory index" style routing.
+     * This is necessary because Astro generates static sites with "directory index" style routing, where URLs like `/about` are served from `/about/index.html`.
+     * The function rewrites requests to append `index.html` to the URI when necessary.
+     */
+    const astroDirectoryIndexRewriteCode = `function handler(event) {
+      var request = event.request;
+      var uri = request.uri;
+
+      if (uri.endsWith('/')) {
+        request.uri = uri + 'index.html';
+      } else if (!uri.includes('.')) {
+        request.uri = uri + '/index.html';
+      }
+
+      return request;
+    }`;
 
     const webDistribution = new cloudfront.Distribution(this, 'WebDistribution', {
       defaultBehavior: {
@@ -166,7 +205,10 @@ function handler(event) {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         functionAssociations: [
           {
-            function: urlRewriteFn,
+            function: new cloudfront.Function(this, 'UrlRewriteFn', {
+              code: cloudfront.FunctionCode.fromInline(astroDirectoryIndexRewriteCode),
+              runtime: cloudfront.FunctionRuntime.JS_2_0,
+            }),
             eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
           },
         ],
@@ -186,11 +228,17 @@ function handler(event) {
       ],
     });
 
+    const bucketDeploymentLogGroup = new logs.LogGroup(this, 'BucketDeploymentLogGroup', {
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     new s3deploy.BucketDeployment(this, 'WebDeploy', {
       sources: [s3deploy.Source.asset(path.join(__dirname, '../../web/dist'))],
       destinationBucket: webBucket,
       distribution: webDistribution,
       distributionPaths: ['/*'],
+      logGroup: bucketDeploymentLogGroup,
     });
 
     new cdk.CfnOutput(this, 'WebUrl', { value: `https://${webDistribution.domainName}` });

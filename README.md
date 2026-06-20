@@ -11,6 +11,16 @@ immutable audit trail for every state transition. The backend targets AWS Lambda
 
 ---
 
+## Live deployment (AWS `us-east-1`)
+
+| Service | URL |
+|---------|-----|
+| **Orders API** | https://io0yidpmek.execute-api.us-east-1.amazonaws.com/ |
+| **API Docs (Scalar UI)** | https://zfteyzd8og.execute-api.us-east-1.amazonaws.com/ |
+| **Web frontend** | https://d32hm8mz6x8wjy.cloudfront.net |
+
+---
+
 ## User Story Coverage
 
 | # | HU | Endpoint / Mechanism | Notes |
@@ -28,7 +38,7 @@ immutable audit trail for every state transition. The backend targets AWS Lambda
 | OpenAPI / Swagger | `apps/api-docs` — Hono + Scalar UI; Zod schemas compiled to OpenAPI 3.1 via `zod-to-openapi`; deployed as its own Lambda + HTTP API |
 | Front básico | `apps/web` — Astro + Tailwind + DaisyUI; three pages: Landing, Customer (create & look up orders), Backoffice (orders table with status badges) |
 | IaC básico | `apps/iac` — AWS CDK TypeScript stack: DynamoDB table, SQS + DLQ, all three Lambdas, HTTP API Gateways, S3 + CloudFront for the web frontend |
-| Despliegue real AWS | CDK stack is ready to `cdk deploy`; every app ships a Lambda entry point (`lambda.ts` / `lambda-handler.ts`) |
+| Despliegue real AWS | CDK stack deployed to `us-east-1` — Orders API, API Docs, and Web frontend live (URLs above) |
 
 ---
 
