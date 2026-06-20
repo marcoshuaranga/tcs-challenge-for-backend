@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { UuidGenerator, SystemClock, OrderNotFoundError } from '@tcs-challenge-for-backend/kernel';
+import { UuidGenerator, SystemClock, OrderNotFoundError, InvalidStateTransitionError } from '@tcs-challenge-for-backend/kernel';
 import { ProcessOrderHandler } from '../../src/application/process-order-handler';
 import { RecordAuditEntryHandler } from '../../src/application/record-audit-entry-handler';
 import { InMemoryOrderRepository } from '../../src/infrastructure/in-memory-order-repository';
@@ -57,25 +57,25 @@ describe('ProcessOrderHandler', () => {
     expect(auditRepo.entries[1]?.event).toBe('ORDER_FAILED');
   });
 
-  it('idempotent: PROCESSING order → no-op (no save, no audit, no gateway call)', async () => {
+  it('PROCESSING order → throws InvalidStateTransitionError (no side-effects)', async () => {
     const { handler, orderRepo, auditRepo } = makeHandler(Infinity);
     const order = makeOrder(50);
     const processing = order.startProcessing(clock);
     await orderRepo.save(processing);
 
-    await handler.execute(processing.id);
+    await expect(handler.execute(processing.id)).rejects.toThrow(InvalidStateTransitionError);
 
     const saved = await orderRepo.findById(processing.id);
     expect(saved?.status).toBe('PROCESSING');
     expect(auditRepo.entries).toHaveLength(0);
   });
 
-  it('idempotent: COMPLETED order → no-op', async () => {
+  it('COMPLETED order → throws InvalidStateTransitionError (no side-effects)', async () => {
     const { handler, orderRepo, auditRepo } = makeHandler(Infinity);
     const order = makeOrder(50).startProcessing(clock).complete(clock);
     await orderRepo.save(order);
 
-    await handler.execute(order.id);
+    await expect(handler.execute(order.id)).rejects.toThrow(InvalidStateTransitionError);
 
     expect(auditRepo.entries).toHaveLength(0);
   });

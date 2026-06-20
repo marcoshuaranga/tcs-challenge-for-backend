@@ -1,10 +1,4 @@
-import {
-  ok,
-  err,
-  AppError,
-  OrderNotFoundError,
-  InvalidStateTransitionError,
-} from '@tcs-challenge-for-backend/kernel';
+import { ok, err, AppError } from '@tcs-challenge-for-backend/kernel';
 import type { Result } from '@tcs-challenge-for-backend/kernel';
 import type { CreateOrderDto } from '@tcs-challenge-for-backend/contracts';
 import type { AuditEntry } from '../domain/audit-entry';
@@ -14,13 +8,11 @@ import type { GetOrderAuditHandler } from './get-order-audit-handler';
 import type { GetOrderHandler } from './get-order-handler';
 import type { ListOrdersHandler } from './list-orders-handler';
 import type { ProcessOrderHandler } from './process-order-handler';
-import type { OrderRepositoryPort } from './ports';
 
 export class OrderAppService {
   constructor(
     private readonly createOrderHandler: CreateOrderHandler,
     private readonly processOrderHandler: ProcessOrderHandler,
-    private readonly orderRepo: OrderRepositoryPort,
     private readonly listOrdersHandler: ListOrdersHandler,
     private readonly getOrderHandler: GetOrderHandler,
     private readonly getOrderAuditHandler: GetOrderAuditHandler,
@@ -38,10 +30,6 @@ export class OrderAppService {
 
   async processOrder(orderId: string): Promise<Result<void, AppError>> {
     try {
-      const order = await this.orderRepo.findById(orderId);
-      if (!order) throw new OrderNotFoundError(orderId);
-      if (order.status !== 'PENDING')
-        throw new InvalidStateTransitionError(order.status, 'PROCESSING');
       await this.processOrderHandler.execute(orderId);
       return ok(undefined);
     } catch (e) {

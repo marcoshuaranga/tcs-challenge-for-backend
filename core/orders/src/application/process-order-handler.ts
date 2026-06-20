@@ -1,4 +1,4 @@
-import { OrderNotFoundError } from '@tcs-challenge-for-backend/kernel';
+import { OrderNotFoundError, InvalidStateTransitionError } from '@tcs-challenge-for-backend/kernel';
 import type { ClockPort } from '@tcs-challenge-for-backend/kernel';
 import type { OrderRepositoryPort, PaymentGatewayPort } from './ports';
 import type { RecordAuditEntryHandler } from './record-audit-entry-handler';
@@ -15,7 +15,7 @@ export class ProcessOrderHandler {
     const order = await this.orderRepo.findById(orderId);
     if (!order) throw new OrderNotFoundError(orderId);
 
-    if (order.status !== 'PENDING') return;
+    if (order.status !== 'PENDING') throw new InvalidStateTransitionError(order.status, 'PROCESSING');
 
     const processing = order.startProcessing(this.clock);
     await this.orderRepo.save(processing);

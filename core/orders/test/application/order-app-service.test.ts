@@ -39,7 +39,6 @@ function makeService() {
   return new OrderAppService(
     createHandler,
     processHandler,
-    orderRepo,
     listOrdersHandler,
     getOrderHandler,
     getOrderAuditHandler,
@@ -187,7 +186,6 @@ describe('OrderAppService', () => {
     const svc = new OrderAppService(
       createHandler,
       processHandler,
-      orderRepo,
       failingListHandler,
       getOrderHandler,
       getOrderAuditHandler,

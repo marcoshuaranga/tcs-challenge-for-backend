@@ -3,8 +3,9 @@
 > Node.js · TypeScript · Hexagonal Architecture · AWS Serverless · pnpm Workspaces
 
 Registers orders, processes them **asynchronously** through a guarded state machine, and keeps an
-immutable audit trail for every state transition. The backend targets AWS Lambda + DynamoDB + SQS;
-a public Astro frontend, an OpenAPI docs app, and a CDK IaC stack are included as bonus deliverables.
+immutable audit trail for every state transition. The backend targets AWS Lambda + DynamoDB + SQS.
+
+**All 5 required user stories are implemented. All 4 bonus deliverables are included.**
 
 → **[Challenge specification](./CHALLENGE.md)**
 
@@ -12,15 +13,22 @@ a public Astro frontend, an OpenAPI docs app, and a CDK IaC stack are included a
 
 ## User Story Coverage
 
-All 5 required user stories are implemented:
-
 | # | HU | Endpoint / Mechanism | Notes |
 |---|-----|----------------------|-------|
 | 1 | Registrar orden | `POST /orders` | Validates body (Zod), persists as `PENDING`, returns `201` |
 | 2 | Consultar orden | `GET /orders/:id` · `GET /orders/:id/audit` | `404` if not found; full audit trail on `/audit` |
-| 3 | Procesar orden | `POST /orders/:id/process` → SQS → worker | Async; guarded state machine; idempotent consumer |
-| 4 | Registrar auditoría | Explicit handler on every transition | `ORDER_CREATED`, `PROCESSING_STARTED`, `COMPLETED`, `FAILED` |
-| 5 | Seguridad básica | Bearer JWT middleware on `/orders*` | HMAC-signed token; `401` on missing/invalid |
+| 3 | Procesar orden | `POST /orders/:id/process` → queue → worker | Async; guarded state machine; idempotent consumer |
+| 4 | Registrar auditoría | Explicit handler on every transition | `ORDER_CREATED`, `ORDER_PROCESSING_STARTED`, `ORDER_COMPLETED`, `ORDER_FAILED` |
+| 5 | Seguridad básica | Bearer JWT middleware on `/orders*` | HMAC-signed token (HS256); `401` on missing/invalid |
+
+### Bonus deliverables
+
+| Bonus | What was built |
+|-------|----------------|
+| OpenAPI / Swagger | `apps/api-docs` — Hono + Scalar UI; Zod schemas compiled to OpenAPI 3.1 via `zod-to-openapi`; deployed as its own Lambda + HTTP API |
+| Front básico | `apps/web` — Astro + Tailwind + DaisyUI; three pages: Landing, Customer (create & look up orders), Backoffice (orders table with status badges) |
+| IaC básico | `apps/iac` — AWS CDK TypeScript stack: DynamoDB table, SQS + DLQ, all three Lambdas, HTTP API Gateways, S3 + CloudFront for the web frontend |
+| Despliegue real AWS | CDK stack is ready to `cdk deploy`; every app ships a Lambda entry point (`lambda.ts` / `lambda-handler.ts`) |
 
 ---
 
@@ -38,6 +46,7 @@ flowchart LR
   WorkerLambda -->|state transitions + audit| DDB
   SQS -. maxReceiveCount=3 .-> DLQ[[SQS DLQ]]
   DocsLambda[api-docs Lambda — Hono + Scalar] -->|zod-to-openapi| Contracts[(core/contracts\nZod schemas)]
+  WebBrowser[Browser] --> CF[CloudFront + S3\nAstro static site]
 ```
 
 The API's responsibility ends at _"order saved as `PENDING` + `ProcessOrderMessage` enqueued."_
@@ -95,7 +104,7 @@ load and delegate to the returned `OrderAppService`.
 ### DynamoDB single-table design
 
 | Access pattern | Operation | Keys |
-|---------------|-----------|------|
+|----------------|-----------|------|
 | Get order by id | `GetItem` | `PK = ORDER#<id>`, `SK = #META` |
 | Get audit trail | `Query` | `PK = ORDER#<id>`, `SK begins_with AUDIT#` |
 | List all orders | `Query GSI1` | `GSI1PK = ORDERS`, `GSI1SK = <createdAt>#<id>` |
@@ -138,6 +147,10 @@ production remedy: sharded GSI partition (`ORDERS#<shard>`) + parallel queries.
 **Messaging:** SQS standard queue with DLQ (`maxReceiveCount = 3`). Visibility timeout
 must exceed worker processing time. CloudWatch alarm on DLQ depth. Standard (not FIFO)
 because ordering and dedup aren't required; the idempotent consumer handles at-least-once.
+
+**Frontend:** Astro static build deployed to **S3 + CloudFront** (HTTPS, global CDN). A CloudFront
+Function rewrites directory-style URLs (`/customer` → `/customer/index.html`) for Astro's
+directory output format. CloudFront handles `403`/`404` errors with a fallback to `index.html`.
 
 **Security:** Mock JWT now → Cognito + API GW authorizer later.
 `JWT_SECRET` moves to **Secrets Manager**; least-privilege IAM per Lambda (API: `PutItem/GetItem/Query`
@@ -211,13 +224,25 @@ EOF
 docker compose up --build
 ```
 
-API is available at `http://localhost:3000`. All services start in dependency order:
-floci → bootstrap (table + queue) → orders-api + orders-worker.
+Services start in dependency order: floci → bootstrap (table + queue) → orders-api + orders-worker.
+
+| Port | Service |
+|------|---------|
+| `3000` | orders-api |
+| `4500` | Floci UI — browser-based DynamoDB + SQS inspector |
+| `4566` | Floci AWS emulator endpoint (internal) |
+
+> **Async behaviour in Docker mode:** `POST /orders/:id/process` enqueues a message to SQS; the
+> worker container picks it up and processes it independently. The final status (`COMPLETED` or
+> `FAILED`) is visible via `GET /orders/:id` once the worker has drained the message (usually
+> within a second).
 
 ### Option B — In-process dev (no Docker)
 
-Runs the combined local runtime (Hono server + worker poll-loop in one process, sharing an
-in-memory queue). No external services required.
+Runs the combined local runtime: the Hono HTTP server and the worker poll-loop run in **the same
+Node.js process**, sharing an in-memory queue. No external services are required. Because the
+queue is in-process, `POST /orders/:id/process` completes synchronously — the order's final
+status is available immediately in the `202` response.
 
 ```bash
 # 1. Install dependencies
@@ -233,18 +258,31 @@ pnpm --filter @tcs-challenge-for-backend/orders-api dev
 
 API is available at `http://localhost:3000`.
 
+### Running the tests
+
+```bash
+pnpm test          # all test suites across the monorepo
+pnpm typecheck     # TypeScript type-check across all packages
+pnpm lint          # ESLint (typescript-eslint flat config)
+```
+
+Tests cover the domain (state machine, value objects), all application handlers (create, process,
+audit, list, get), infrastructure adapters (DynamoDB repositories, SQS publisher, fake gateway),
+and the composition root (`composeOrders`).
+
 ---
 
 ## API Usage
 
-### 1. Mint a demo JWT
+### 1. Get the demo JWT
 
-```bash
-pnpm token
-# → prints: Bearer eyJ...
+A pre-signed token is included in `.env.example` (signed with `JWT_SECRET=change-me-in-local-only`):
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZW1vLXVzZXIiLCJleHAiOjE4MTM0NDk2MDB9.q_gVK7c1pQMVWifUK4CEYIv_E4Wct-F_Jwx084_hby4
 ```
 
-Use the printed token as `Authorization: Bearer <token>` in all `/orders*` calls.
+Use this header in all `/orders*` calls.
 
 ### 2. Create an order
 
@@ -269,10 +307,16 @@ curl -s http://localhost:3000/orders/<id> \
 ```bash
 curl -s http://localhost:3000/orders/<id>/audit \
   -H "Authorization: Bearer <token>" | jq
-# → 200 AuditEntry[]  (ORDER_CREATED + any subsequent transitions)
+# → 200 AuditEntry[]
 ```
 
-### 5. Trigger processing manually
+Each entry contains: `orderId`, `event`, `previousState`, `newState`, `timestamp`, and an
+optional `reason` (present on `ORDER_FAILED` entries).
+
+Full lifecycle events in order: `ORDER_CREATED` → `ORDER_PROCESSING_STARTED` → `ORDER_COMPLETED`
+(or `ORDER_FAILED`).
+
+### 5. Trigger processing
 
 ```bash
 curl -s -X POST http://localhost:3000/orders/<id>/process \
@@ -305,7 +349,7 @@ All errors follow `{ "error": { "code": "...", "message": "..." } }`.
 
 | Scenario | HTTP code |
 |----------|-----------|
-| Missing / invalid body field | `400` |
+| Invalid or missing body field | `422` |
 | Missing / invalid Bearer token | `401` |
 | Order not found | `404` |
 | Illegal state transition | `409` |
@@ -319,8 +363,8 @@ All errors follow `{ "error": { "code": "...", "message": "..." } }`.
 | `apps/orders-api` | Hono HTTP edge (Lambda + local server) |
 | `apps/orders-worker` | Async SQS consumer / local poll-loop |
 | `apps/api-docs` | OpenAPI 3.1 spec (Zod → zod-to-openapi) + Scalar UI |
-| `apps/web` | Astro + Tailwind + DaisyUI — landing, customer, backoffice pages |
-| `apps/iac` | AWS CDK stack (DynamoDB, SQS + DLQ, Lambdas, HTTP APIs, IAM) |
+| `apps/web` | Astro + Tailwind + DaisyUI — Landing, Customer (create/look up), Backoffice (orders table) |
+| `apps/iac` | AWS CDK stack (DynamoDB, SQS + DLQ, Lambdas, HTTP APIs, S3 + CloudFront, IAM) |
 | `core/orders` | Hexagonal core: domain, application, infrastructure, composition root |
 | `core/contracts` | Zod schemas + inferred DTOs (single source of truth) |
 | `core/kernel` | Result/error types, id/clock abstractions |

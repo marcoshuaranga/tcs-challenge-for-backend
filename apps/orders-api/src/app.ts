@@ -54,7 +54,8 @@ export function makeApp(env: AppEnv) {
   app.post(
     '/orders',
     sValidator('json', CreateOrderSchema, (result, c) => {
-      if (!result.success) return c.json({ error: 'Validation failed' }, 422);
+      if (!result.success)
+        return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Validation failed' } }, 422);
       return undefined;
     }),
     async (c) => {
@@ -67,13 +68,13 @@ export function makeApp(env: AppEnv) {
       if (error instanceof InvalidMoneyError) {
         return c.json({ error: { code: error.code, message: error.message } }, 422);
       }
-      return c.json({ error: 'Internal error' }, 500);
+      return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
     },
   );
 
   app.get('/orders', async (c) => {
     const result = await orderService.listOrders();
-    if (!result.ok) return c.json({ error: 'Internal error' }, 500);
+    if (!result.ok) return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
     return c.json(result.value.map(serializeOrder));
   });
 
@@ -87,7 +88,7 @@ export function makeApp(env: AppEnv) {
     if (error instanceof OrderNotFoundError) {
       return c.json({ error: { code: error.code, message: error.message } }, 404);
     }
-    return c.json({ error: 'Internal error' }, 500);
+    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
   });
 
   app.get('/orders/:id', async (c) => {
@@ -100,7 +101,7 @@ export function makeApp(env: AppEnv) {
     if (error instanceof OrderNotFoundError) {
       return c.json({ error: { code: error.code, message: error.message } }, 404);
     }
-    return c.json({ error: 'Internal error' }, 500);
+    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
   });
 
   app.post('/orders/:id/process', async (c) => {
@@ -118,7 +119,7 @@ export function makeApp(env: AppEnv) {
     if (error instanceof InvalidStateTransitionError) {
       return c.json({ error: { code: error.code, message: error.message } }, 409);
     }
-    return c.json({ error: 'Internal error' }, 500);
+    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
   });
 
   return app;

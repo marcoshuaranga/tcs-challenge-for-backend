@@ -32,8 +32,10 @@ export type OrderResponseDto = z.infer<typeof OrderResponseSchema>;
 
 export const ErrorEnvelopeSchema = z
   .object({
-    error: z.string(),
-    message: z.string(),
+    error: z.object({
+      code: z.string(),
+      message: z.string(),
+    }),
   })
   .openapi('ErrorEnvelope');
 

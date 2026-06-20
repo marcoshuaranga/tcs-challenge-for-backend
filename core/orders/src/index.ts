@@ -86,7 +86,6 @@ export function composeOrders(
   return new OrderAppService(
     createHandler,
     processHandler,
-    orderRepo,
     listOrdersHandler,
     getOrderHandler,
     getOrderAuditHandler,
