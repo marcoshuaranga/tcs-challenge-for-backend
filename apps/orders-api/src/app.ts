@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sValidator } from '@hono/standard-validator';
-import { CreateOrderSchema } from '@tcs-challenge-for-backend/contracts';
+import { CreateOrderSchema, type OrderResponseDto } from '@tcs-challenge-for-backend/contracts';
 import {
   composeOrders,
   InvalidMoneyError,
@@ -21,7 +21,7 @@ type AppEnv = {
   QUEUE_URL?: string;
 };
 
-function serializeOrder(order: Order) {
+function serializeOrder(order: Order): OrderResponseDto {
   return {
     id: order.id,
     status: order.status,
