@@ -31,8 +31,8 @@
 
 ## 5. Verify & commit
 
-- [ ] 5.1 Run `pnpm --filter iac cdk synth` — CloudFormation template generates without errors
-- [ ] 5.2 Run `pnpm run typecheck` — zero errors across workspace
-- [ ] 5.3 Commit: `feat(iac): deploy api-docs as Lambda + HTTP API Gateway`
-- [ ] 5.4 Build web with env vars set: `pnpm --filter web build`
-- [ ] 5.5 Commit: `feat(iac): deploy web static site via S3 + CloudFront`
+- [x] 5.1 Run `pnpm --filter iac cdk synth` — CloudFormation template generates without errors
+- [x] 5.2 Run `pnpm run typecheck` — zero errors across workspace
+- [x] 5.3 Commit: `feat(iac): deploy api-docs as Lambda + HTTP API Gateway`
+- [x] 5.4 Build web with env vars set: `pnpm --filter web build`
+- [x] 5.5 Commit: `feat(iac): deploy web static site via S3 + CloudFront`
