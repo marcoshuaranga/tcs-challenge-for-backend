@@ -65,9 +65,9 @@
 - [x] 6.2 Verify dev server: table populates when orders exist; empty-state shown
       when none
 - [x] 6.3 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/web`
-- [ ] 6.4 Commit: `feat(web): Backoffice page — orders table`
+- [x] 6.4 Commit: `feat(web): Backoffice page — orders table`
 
 ## 7. Quality gate
 
-- [ ] 7.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
+- [x] 7.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
 - [ ] 7.2 Archive this change with `/opsx:archive`

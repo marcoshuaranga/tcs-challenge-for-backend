@@ -31,7 +31,7 @@ const demoJwt = import.meta.env.DEMO_JWT ?? '';
       </div>
     </div>
 
-    <script define:vars={{ apiUrl, demoJwt }}>
+    <script is:inline define:vars={{ apiUrl, demoJwt }}>
       const headers = { Authorization: `Bearer ${demoJwt}` };
 
       function statusBadge(status) {
