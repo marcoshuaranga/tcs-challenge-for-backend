@@ -52,6 +52,21 @@ export function makeApp(env: AppEnv) {
     },
   );
 
+  app.get('/orders', async (c) => {
+    const result = await orderService.listOrders();
+    return c.json(
+      result.value.map((order) => ({
+        id: order.id,
+        status: order.status,
+        customerId: order.customerId,
+        amount: order.money.amount,
+        currency: order.money.currency,
+        createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
+      })),
+    );
+  });
+
   app.get('/orders/:id/audit', async (c) => {
     const id = c.req.param('id');
     const result = await orderService.getOrderAudit(id);

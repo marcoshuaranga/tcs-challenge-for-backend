@@ -67,6 +67,52 @@ describe('POST /orders', () => {
   });
 });
 
+describe('GET /orders', () => {
+  it('without Bearer token returns 401', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET });
+    const res = await app.request('/orders');
+    expect(res.status).toBe(401);
+  });
+
+  it('with valid JWT and empty store returns 200 with []', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET });
+    const token = await makeToken();
+    const res = await app.request('/orders', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual([]);
+  });
+
+  it('with valid JWT and existing orders returns 200 with array of OrderResponseDto', async () => {
+    const app = makeApp({ JWT_SECRET: TEST_SECRET });
+    const token = await makeToken();
+    await createPendingOrder(app, token);
+    await createPendingOrder(app, token);
+    const res = await app.request('/orders', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Array<{
+      id: string;
+      status: string;
+      customerId: string;
+      amount: number;
+      currency: string;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    expect(body).toHaveLength(2);
+    expect(body[0].status).toBe('PENDING');
+    expect(body[0].customerId).toBe('C1');
+    expect(body[0].amount).toBe(50);
+    expect(body[0].currency).toBe('USD');
+    expect(typeof body[0].createdAt).toBe('string');
+    expect(typeof body[0].updatedAt).toBe('string');
+  });
+});
+
 describe('GET /orders/:id', () => {
   it('without Bearer token returns 401', async () => {
     const app = makeApp({ JWT_SECRET: TEST_SECRET });
@@ -167,12 +213,10 @@ describe('POST /orders/:id/process', () => {
     const app = makeApp({ JWT_SECRET: TEST_SECRET });
     const token = await makeToken();
     const id = await createPendingOrder(app, token);
-    // First process moves it to COMPLETED
     await app.request(`/orders/${id}/process`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
-    // Second call should 409
     const res = await app.request(`/orders/${id}/process`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
