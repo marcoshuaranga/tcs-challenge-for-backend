@@ -1,24 +1,24 @@
 ## 1. apps/iac — package setup
 
-- [ ] 1.1 Create `apps/iac/package.json` with name `@tcs-challenge-for-backend/iac`;
+- [x] 1.1 Create `apps/iac/package.json` with name `@tcs-challenge-for-backend/iac`;
       add `aws-cdk-lib`, `constructs`, `esbuild` as dependencies;
       add `aws-cdk` as dev dependency; add scripts: `cdk`, `synth`, `deploy`, `destroy`
-- [ ] 1.2 Create `apps/iac/tsconfig.json` extending `../../tsconfig.node.json`;
+- [x] 1.2 Create `apps/iac/tsconfig.json` extending `../../tsconfig.node.json`;
       include `bin/` and `lib/`
-- [ ] 1.3 Create `apps/iac/cdk.json`: `{ "app": "npx ts-node bin/app.ts" }`
-- [ ] 1.4 Add `apps/iac` to `pnpm-workspace.yaml` if not already present;
+- [x] 1.3 Create `apps/iac/cdk.json`: `{ "app": "npx ts-node bin/app.ts" }`
+- [x] 1.4 Add `apps/iac` to `pnpm-workspace.yaml` if not already present;
       run `pnpm install`
 
 ## 2. apps/iac — CDK app entry point
 
-- [ ] 2.1 Create `apps/iac/bin/app.ts`: instantiate a `cdk.App()` and create
+- [x] 2.1 Create `apps/iac/bin/app.ts`: instantiate a `cdk.App()` and create
       `TcsChallengeStack` with env `{ account, region }` from env vars
       `CDK_DEFAULT_ACCOUNT` / `CDK_DEFAULT_REGION`
-- [ ] 2.2 Create `apps/iac/lib/tcs-challenge-stack.ts` with empty `TcsChallengeStack`
+- [x] 2.2 Create `apps/iac/lib/tcs-challenge-stack.ts` with empty `TcsChallengeStack`
       class extending `cdk.Stack`
-- [ ] 2.3 Verify `pnpm --filter iac cdk ls` lists `TcsChallengeStack` without errors
-- [ ] 2.4 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
-- [ ] 2.5 Commit: `feat(iac): CDK app scaffold — bin/app.ts + empty TcsChallengeStack`
+- [x] 2.3 Verify `pnpm --filter iac cdk ls` lists `TcsChallengeStack` without errors
+- [x] 2.4 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
+- [x] 2.5 Commit: `feat(iac): CDK app scaffold — bin/app.ts + empty TcsChallengeStack`
 
 ## 3. apps/iac — DynamoDB table construct (TDD)
 
