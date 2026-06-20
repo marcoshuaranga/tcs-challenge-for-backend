@@ -60,6 +60,35 @@ describe('InMemoryAuditRepository', () => {
     expect(repo.entries).toHaveLength(1);
     expect(repo.entries[0]).toEqual(entry);
   });
+
+  it('findByOrderId returns entries in insertion order for a known orderId', async () => {
+    const repo = new InMemoryAuditRepository();
+    const e1 = { orderId: 'order-1', event: 'ORDER_CREATED', previousState: null, newState: 'PENDING', timestamp: new Date() };
+    const e2 = { orderId: 'order-1', event: 'ORDER_PROCESSING', previousState: 'PENDING', newState: 'PROCESSING', timestamp: new Date() };
+    await repo.append(e1);
+    await repo.append(e2);
+    const found = await repo.findByOrderId('order-1');
+    expect(found).toHaveLength(2);
+    expect(found[0]).toEqual(e1);
+    expect(found[1]).toEqual(e2);
+  });
+
+  it('findByOrderId returns empty array for orderId with no entries', async () => {
+    const repo = new InMemoryAuditRepository();
+    const found = await repo.findByOrderId('unknown-order');
+    expect(found).toEqual([]);
+  });
+
+  it('findByOrderId filters out entries for other orders', async () => {
+    const repo = new InMemoryAuditRepository();
+    const e1 = { orderId: 'order-1', event: 'ORDER_CREATED', previousState: null, newState: 'PENDING', timestamp: new Date() };
+    const e2 = { orderId: 'order-2', event: 'ORDER_CREATED', previousState: null, newState: 'PENDING', timestamp: new Date() };
+    await repo.append(e1);
+    await repo.append(e2);
+    const found = await repo.findByOrderId('order-1');
+    expect(found).toHaveLength(1);
+    expect(found[0]).toEqual(e1);
+  });
 });
 
 describe('InMemoryMessagePublisher', () => {

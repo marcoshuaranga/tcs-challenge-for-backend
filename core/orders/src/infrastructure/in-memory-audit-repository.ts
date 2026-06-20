@@ -7,4 +7,8 @@ export class InMemoryAuditRepository implements AuditRepositoryPort {
   async append(entry: AuditEntry): Promise<void> {
     this.entries.push(entry);
   }
+
+  async findByOrderId(orderId: string): Promise<AuditEntry[]> {
+    return this.entries.filter((e) => e.orderId === orderId);
+  }
 }

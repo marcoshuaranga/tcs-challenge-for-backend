@@ -8,6 +8,7 @@ export interface OrderRepositoryPort {
 
 export interface AuditRepositoryPort {
   append(entry: AuditEntry): Promise<void>;
+  findByOrderId(orderId: string): Promise<AuditEntry[]>;
 }
 
 export interface MessagePublisherPort {
