@@ -1,6 +1,7 @@
 import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { Scalar } from '@scalar/hono-api-reference';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { z } from 'zod';
 import {
   CreateOrderSchema,
@@ -168,11 +169,12 @@ export function makeDocsApp(apiUrl = 'http://localhost:3000'): Hono {
 
   const app = new Hono();
 
+  app.use('*', cors());
+
   app.get('/openapi.json', (c) => c.json(document));
 
   const scalarHandler = Scalar({ spec: { url: '/openapi.json' } });
   app.get('/', scalarHandler);
-  app.get('/docs', scalarHandler);
 
   return app;
 }
