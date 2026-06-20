@@ -6,6 +6,9 @@ dist
 tmp
 out-tsc
 
+# Astro generated
+.astro/
+
 # IDEs and editors
 /.idea
 .project
