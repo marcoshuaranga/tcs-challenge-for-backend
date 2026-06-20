@@ -39,6 +39,23 @@ describe('InMemoryOrderRepository', () => {
     const repo = new InMemoryOrderRepository();
     expect(await repo.findById('unknown')).toBeNull();
   });
+
+  it('listAll returns all saved orders', async () => {
+    const repo = new InMemoryOrderRepository();
+    const o1 = makeOrder();
+    const o2 = makeOrder();
+    await repo.save(o1);
+    await repo.save(o2);
+    const all = await repo.listAll();
+    expect(all).toHaveLength(2);
+    expect(all.map((o) => o.id)).toContain(o1.id);
+    expect(all.map((o) => o.id)).toContain(o2.id);
+  });
+
+  it('listAll returns empty array when repository is empty', async () => {
+    const repo = new InMemoryOrderRepository();
+    expect(await repo.listAll()).toEqual([]);
+  });
 });
 
 describe('InMemoryAuditRepository', () => {
@@ -63,8 +80,20 @@ describe('InMemoryAuditRepository', () => {
 
   it('findByOrderId returns entries in insertion order for a known orderId', async () => {
     const repo = new InMemoryAuditRepository();
-    const e1 = { orderId: 'order-1', event: 'ORDER_CREATED', previousState: null, newState: 'PENDING', timestamp: new Date() };
-    const e2 = { orderId: 'order-1', event: 'ORDER_PROCESSING', previousState: 'PENDING', newState: 'PROCESSING', timestamp: new Date() };
+    const e1 = {
+      orderId: 'order-1',
+      event: 'ORDER_CREATED',
+      previousState: null,
+      newState: 'PENDING',
+      timestamp: new Date(),
+    };
+    const e2 = {
+      orderId: 'order-1',
+      event: 'ORDER_PROCESSING',
+      previousState: 'PENDING',
+      newState: 'PROCESSING',
+      timestamp: new Date(),
+    };
     await repo.append(e1);
     await repo.append(e2);
     const found = await repo.findByOrderId('order-1');
@@ -81,8 +110,20 @@ describe('InMemoryAuditRepository', () => {
 
   it('findByOrderId filters out entries for other orders', async () => {
     const repo = new InMemoryAuditRepository();
-    const e1 = { orderId: 'order-1', event: 'ORDER_CREATED', previousState: null, newState: 'PENDING', timestamp: new Date() };
-    const e2 = { orderId: 'order-2', event: 'ORDER_CREATED', previousState: null, newState: 'PENDING', timestamp: new Date() };
+    const e1 = {
+      orderId: 'order-1',
+      event: 'ORDER_CREATED',
+      previousState: null,
+      newState: 'PENDING',
+      timestamp: new Date(),
+    };
+    const e2 = {
+      orderId: 'order-2',
+      event: 'ORDER_CREATED',
+      previousState: null,
+      newState: 'PENDING',
+      timestamp: new Date(),
+    };
     await repo.append(e1);
     await repo.append(e2);
     const found = await repo.findByOrderId('order-1');

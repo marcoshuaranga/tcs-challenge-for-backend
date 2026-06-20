@@ -11,4 +11,8 @@ export class InMemoryOrderRepository implements OrderRepositoryPort {
   async findById(id: string): Promise<Order | null> {
     return this.store.get(id) ?? null;
   }
+
+  async listAll(): Promise<Order[]> {
+    return [...this.store.values()];
+  }
 }

@@ -4,6 +4,7 @@ import type { Order } from '../domain/order';
 export interface OrderRepositoryPort {
   save(order: Order): Promise<void>;
   findById(id: string): Promise<Order | null>;
+  listAll(): Promise<Order[]>;
 }
 
 export interface AuditRepositoryPort {
