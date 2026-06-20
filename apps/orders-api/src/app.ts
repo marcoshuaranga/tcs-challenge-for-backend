@@ -14,6 +14,10 @@ type AppEnv = {
   USE_AWS_DYNAMO?: string;
   USE_AWS_SQS?: string;
   FAIL_ABOVE_AMOUNT?: string;
+  ORDERS_TABLE?: string;
+  AWS_REGION?: string;
+  DDB_ENDPOINT?: string;
+  QUEUE_URL?: string;
 };
 
 export function makeApp(env: AppEnv) {
@@ -21,6 +25,10 @@ export function makeApp(env: AppEnv) {
     USE_AWS_DYNAMO: env.USE_AWS_DYNAMO,
     USE_AWS_SQS: env.USE_AWS_SQS,
     FAIL_ABOVE_AMOUNT: env.FAIL_ABOVE_AMOUNT,
+    ORDERS_TABLE: env.ORDERS_TABLE,
+    AWS_REGION: env.AWS_REGION,
+    DDB_ENDPOINT: env.DDB_ENDPOINT,
+    QUEUE_URL: env.QUEUE_URL,
   });
 
   const app = new Hono();
