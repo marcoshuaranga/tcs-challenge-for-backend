@@ -50,3 +50,48 @@ describe('SQS queue + DLQ', () => {
     });
   });
 });
+
+describe('orders-api Lambda + API Gateway', () => {
+  it('orders-api log group has 7-day retention and DESTROY policy', () => {
+    template.hasResource('AWS::Logs::LogGroup', {
+      Properties: {
+        RetentionInDays: 7,
+      },
+      DeletionPolicy: 'Delete',
+    });
+  });
+
+  it('orders-api Lambda has required env vars', () => {
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      Environment: {
+        Variables: Match.objectLike({
+          ORDERS_TABLE: Match.anyValue(),
+          USE_AWS_DYNAMO: 'true',
+          JWT_SECRET: Match.anyValue(),
+          FAIL_ABOVE_AMOUNT: Match.anyValue(),
+        }),
+      },
+    });
+  });
+
+  it('orders-api Lambda has DynamoDB IAM policy', () => {
+    template.hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: {
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Effect: 'Allow',
+            Action: Match.arrayWith(['dynamodb:PutItem']),
+          }),
+        ]),
+      },
+    });
+  });
+
+  it('stack has an HTTP API Gateway', () => {
+    template.resourceCountIs('AWS::ApiGatewayV2::Api', 1);
+  });
+
+  it('stack has an HTTP API Lambda integration', () => {
+    template.resourceCountIs('AWS::ApiGatewayV2::Integration', 1);
+  });
+});

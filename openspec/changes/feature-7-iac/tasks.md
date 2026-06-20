@@ -37,18 +37,18 @@
 
 ## 4. apps/iac — SQS queue + DLQ construct (TDD)
 
-- [ ] 4.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
+- [x] 4.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
       — stack has two `AWS::SQS::Queue` resources;
       — main queue `RedrivePolicy` references the DLQ with `maxReceiveCount: 3`
       (ADR-0006 value);
       — DLQ has `MessageRetentionPeriod` of 14 days (1209600 seconds)
-- [ ] 4.2 Add DLQ (`sqs.Queue`, 14-day retention, `removalPolicy: DESTROY`) and
+- [x] 4.2 Add DLQ (`sqs.Queue`, 14-day retention, `removalPolicy: DESTROY`) and
       main queue (`sqs.Queue`, redrive policy pointing at DLQ, `removalPolicy: DESTROY`);
       export queue URL as `CfnOutput`
-- [ ] 4.3 Verify CDK assertion tests pass (green)
-- [ ] 4.4 Run `pnpm --filter iac cdk synth` — template valid
-- [ ] 4.5 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
-- [ ] 4.6 Commit: `feat(iac): SQS queue + DLQ`
+- [x] 4.3 Verify CDK assertion tests pass (green)
+- [x] 4.4 Run `pnpm --filter iac cdk synth` — template valid
+- [x] 4.5 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
+- [x] 4.6 Commit: `feat(iac): SQS queue + DLQ`
 
 ## 5. apps/iac — orders-api Lambda + API Gateway (TDD)
 
