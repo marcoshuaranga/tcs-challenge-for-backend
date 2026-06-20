@@ -76,32 +76,32 @@
 
 ## 6. apps/iac — orders-worker Lambda + SQS event source (TDD)
 
-- [ ] 6.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
+- [x] 6.1 Extend failing tests in `apps/iac/test/tcs-challenge-stack.test.ts`:
       — stack has an `AWS::Logs::LogGroup` for orders-worker with `RetentionInDays: 7`
       and `DeletionPolicy: Delete`;
       — stack has a second `AWS::Lambda::Function` with env vars `ORDERS_TABLE`,
       `QUEUE_URL`, `USE_AWS_DYNAMO`, `USE_AWS_SQS`;
       — that Lambda has an `AWS::Lambda::EventSourceMapping` with `BatchSize: 1`
       pointing at the main SQS queue
-- [ ] 6.2 Add explicit `logs.LogGroup` for orders-worker:
+- [x] 6.2 Add explicit `logs.LogGroup` for orders-worker:
       `retention: RetentionDays.ONE_WEEK`, `removalPolicy: DESTROY`
-- [ ] 6.3 Add `orders-worker` Lambda (`NodejsFunction` pointing at
+- [x] 6.3 Add `orders-worker` Lambda (`NodejsFunction` pointing at
       `apps/orders-worker/src/lambda-handler.ts`); set env vars: `ORDERS_TABLE`,
       `QUEUE_URL` (from `queue.queueUrl`), `FAIL_ABOVE_AMOUNT`,
       `USE_AWS_DYNAMO=true`, `USE_AWS_SQS=true`, `AWS_REGION`; wire `logGroup` prop
       to the managed log group;
       grant `table.grantReadWriteData(ordersWorkerLambda)` and
       `queue.grantConsumeMessages(ordersWorkerLambda)`
-- [ ] 6.4 Add SQS event source:
+- [x] 6.4 Add SQS event source:
       `ordersWorkerLambda.addEventSource(new SqsEventSource(queue, { batchSize: 1 }))`
-- [ ] 6.5 Verify CDK assertion tests pass (green)
-- [ ] 6.6 Run `pnpm --filter iac cdk synth` — template valid
-- [ ] 6.7 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
-- [ ] 6.8 Commit: `feat(iac): orders-worker Lambda + SQS event source mapping`
+- [x] 6.5 Verify CDK assertion tests pass (green)
+- [x] 6.6 Run `pnpm --filter iac cdk synth` — template valid
+- [x] 6.7 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/iac`
+- [x] 6.8 Commit: `feat(iac): orders-worker Lambda + SQS event source mapping`
 
 ## 7. Quality gate
 
-- [ ] 7.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
-- [ ] 7.2 Run `pnpm run test` across workspace — all CDK assertion tests green
-- [ ] 7.3 Run `pnpm --filter iac cdk synth` — final template valid with all resources
+- [x] 7.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
+- [x] 7.2 Run `pnpm run test` across workspace — all CDK assertion tests green
+- [x] 7.3 Run `pnpm --filter iac cdk synth` — final template valid with all resources
 - [ ] 7.4 Archive this change with `/opsx:archive`
