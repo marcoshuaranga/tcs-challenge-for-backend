@@ -8,6 +8,8 @@ import type { OrderEntity } from './dynamo-entities';
 
 type OrderItem = FormattedItem<OrderEntity>;
 
+const MAX_QUERY_PAGES = 100;
+
 export class DynamoOrderRepository implements OrderRepositoryPort {
   constructor(private readonly entity: OrderEntity) {}
 
@@ -44,7 +46,7 @@ export class DynamoOrderRepository implements OrderRepositoryPort {
       .build(QueryCommand)
       .query({ index: 'GSI1', partition: 'ORDERS' })
       .entities(this.entity)
-      .options({ maxPages: Infinity })
+      .options({ maxPages: MAX_QUERY_PAGES })
       .send();
     return Items.map((item) => this.itemToOrder(item as NonNullable<OrderItem>));
   }

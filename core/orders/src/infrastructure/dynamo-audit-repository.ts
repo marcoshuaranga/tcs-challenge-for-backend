@@ -3,6 +3,8 @@ import type { AuditRepositoryPort } from '../application/ports';
 import type { AuditEntry } from '../domain/audit-entry';
 import type { AuditEntity } from './dynamo-entities';
 
+const MAX_QUERY_PAGES = 100;
+
 export class DynamoAuditRepository implements AuditRepositoryPort {
   constructor(private readonly entity: AuditEntity) {}
 
@@ -29,7 +31,7 @@ export class DynamoAuditRepository implements AuditRepositoryPort {
       .build(QueryCommand)
       .query({ partition: `ORDER#${orderId}`, range: { beginsWith: 'AUDIT#' } })
       .entities(this.entity)
-      .options({ maxPages: Infinity })
+      .options({ maxPages: MAX_QUERY_PAGES })
       .send();
 
     return Items.map((item) => ({
