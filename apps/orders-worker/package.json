@@ -1,5 +1,19 @@
 {
   "name": "@tcs-challenge-for-backend/orders-worker",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "scripts": {
+    "dev": "node --env-file=../../.env --import tsx/esm src/index.ts",
+    "start": "node --import tsx/esm src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tcs-challenge-for-backend/orders": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.149",
+    "tsx": "^4.22.0",
+    "vitest": "^4.1.9"
+  }
 }

@@ -98,38 +98,38 @@
 
 ## 11. apps/orders-worker — package setup
 
-- [ ] 11.1 Create `apps/orders-worker/package.json` with name
+- [x] 11.1 Create `apps/orders-worker/package.json` with name
        `@tcs-challenge-for-backend/orders-worker`; add `@tcs-challenge-for-backend/orders`
        as workspace dep; add `dev`, `start`, `typecheck` scripts
-- [ ] 11.2 Create `apps/orders-worker/tsconfig.json` extending `../../tsconfig.node.json`
-- [ ] 11.3 Add `apps/orders-worker` to `pnpm-workspace.yaml` if not already present
+- [x] 11.2 Create `apps/orders-worker/tsconfig.json` extending `../../tsconfig.node.json`
+- [x] 11.3 Add `apps/orders-worker` to `pnpm-workspace.yaml` if not already present
 
 ## 12. apps/orders-worker — poll-loop (TDD)
 
-- [ ] 12.1 Write failing tests in `apps/orders-worker/test/poll-loop.test.ts`:
+- [x] 12.1 Write failing tests in `apps/orders-worker/test/poll-loop.test.ts`:
        — one pending orderId in InMemoryMessagePublisher → poll-loop calls processOrder, order no longer PENDING;
        — empty queue → poll-loop iterates without calling processOrder
-- [ ] 12.2 Implement `startPollLoop(appService, publisher): () => void` in
+- [x] 12.2 Implement `startPollLoop(appService, publisher): () => void` in
        `apps/orders-worker/src/poll-loop.ts`; drains `InMemoryMessagePublisher.drain()` and
        calls `appService.processOrder(orderId)` per id; returns a stop function
-- [ ] 12.3 Verify poll-loop tests pass (green)
+- [x] 12.3 Verify poll-loop tests pass (green)
 
 ## 13. apps/orders-worker — Lambda SQS handler (TDD)
 
-- [ ] 13.1 Write failing tests in `apps/orders-worker/test/lambda-handler.test.ts`:
+- [x] 13.1 Write failing tests in `apps/orders-worker/test/lambda-handler.test.ts`:
        — valid SQSEvent with one record `{ orderId }` → `processOrder` called exactly once;
        — record body is not parseable as `{ orderId }` → error logged, remaining records processed (no crash)
-- [ ] 13.2 Implement Lambda SQS handler in `apps/orders-worker/src/lambda-handler.ts`:
+- [x] 13.2 Implement Lambda SQS handler in `apps/orders-worker/src/lambda-handler.ts`:
        parses each `SQSRecord.body` as `{ orderId: string }`, calls `appService.processOrder`,
        catches and logs errors per record without aborting the batch; exports `handler`
-- [ ] 13.3 Verify Lambda handler tests pass (green)
-- [ ] 13.4 Create `apps/orders-worker/src/index.ts` entry point for local dev:
+- [x] 13.3 Verify Lambda handler tests pass (green)
+- [x] 13.4 Create `apps/orders-worker/src/index.ts` entry point for local dev:
        calls `composeOrders(env)` and `startPollLoop`
 
 ## 14. apps/orders-worker — commit
 
-- [ ] 14.1 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/orders-worker`
-- [ ] 14.2 Commit: `feat(worker): orders-worker — poll-loop + Lambda SQS handler`
+- [x] 14.1 Run `pnpm run lint` and `pnpm dlx prettier --write .` on `apps/orders-worker`
+- [x] 14.2 Commit: `feat(worker): orders-worker — poll-loop + Lambda SQS handler`
 
 ## 15. Quality gate
 
