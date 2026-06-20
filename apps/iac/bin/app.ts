@@ -1,35 +1,35 @@
 #!/usr/bin/env node
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+
 import * as cdk from 'aws-cdk-lib';
 import { TcsChallengeStack } from '../lib/tcs-challenge-stack';
-
-const envFile = path.resolve(__dirname, '../../../.env');
-const { error } = dotenv.config({ path: envFile });
-
-if (error) throw new Error(`.env not found at ${envFile} — create it from .env.example`);
+import { TcsChallengeWebStack } from '../lib/tcs-challenge-web-stack';
+import { loadEnvVars } from '../lib/helpers';
 
 const app = new cdk.App();
-const deployEnv = process.env['DEPLOY_ENV'] ?? 'dev';
+const envVars = loadEnvVars(app.node.tryGetContext('mode'));
 
-new TcsChallengeStack(
+const mainStack = new TcsChallengeStack(
   app,
-  `TcsChallengeStack-${deployEnv}`,
+  `TcsChallengeStack-${envVars.DEPLOY_ENV}`,
   {
-    description: `TCS Challenge — async order-processing platform (Lambdas, DynamoDB, SQS, CloudFront) [${deployEnv}]`,
-    stackName: `tcs-challenge-${deployEnv}`,
-    env: {
-      account: process.env['AWS_ACCOUNT_ID'] ?? '000000000000',
-      region: process.env['AWS_REGION'] ?? 'us-east-1',
-    },
-    tags: {
-      Project: 'tcs-challenge',
-      Owner: 'maracudev',
-      Env: deployEnv,
-    },
+    env: { account: envVars.AWS_ACCOUNT_ID, region: envVars.AWS_REGION },
+    tags: { Project: 'tcs-challenge', Owner: 'maracudev', Env: envVars.DEPLOY_ENV },
+    description: `TCS Challenge — async order-processing platform (Lambdas, DynamoDB, SQS) [${envVars.DEPLOY_ENV}]`,
+    stackName: `tcs-challenge-${envVars.DEPLOY_ENV}`,
   },
   {
-    failAboveAmount: process.env['FAIL_ABOVE_AMOUNT'] ?? '1000',
-    jwtSecret: process.env['JWT_SECRET'] ?? '',
+    failAboveAmount: envVars.FAIL_ABOVE_AMOUNT,
+    jwtSecret: envVars.JWT_SECRET,
   },
 );
+
+const webStack = new TcsChallengeWebStack(app, `TcsChallengeWebStack-${envVars.DEPLOY_ENV}`, {
+  env: { account: envVars.AWS_ACCOUNT_ID, region: envVars.AWS_REGION },
+  tags: { Project: 'tcs-challenge', Owner: 'maracudev', Env: envVars.DEPLOY_ENV },
+  description: `TCS Challenge — web frontend (S3 + CloudFront) [${envVars.DEPLOY_ENV}]`,
+  stackName: `tcs-challenge-web-${envVars.DEPLOY_ENV}`,
+});
+
+new cdk.CfnOutput(mainStack, 'OrdersApiUrl', { value: mainStack.ordersApiUrl });
+new cdk.CfnOutput(mainStack, 'ApiDocsUrl', { value: mainStack.apiDocsUrl });
+new cdk.CfnOutput(webStack, 'WebUrl', { value: webStack.webUrl });
