@@ -69,18 +69,18 @@
 
 ## 8. Composition root — extend composeOrders (TDD)
 
-- [ ] 8.1 Write failing test in `core/orders/test/index.test.ts` (extend existing file):
+- [x] 8.1 Write failing test in `core/orders/test/index.test.ts` (extend existing file):
       `composeOrders({}).processOrder('nonexistent')` returns `err(OrderNotFoundError)`
-- [ ] 8.2 Extend `composeOrders(env)` in `core/orders/src/index.ts` to wire
+- [x] 8.2 Extend `composeOrders(env)` in `core/orders/src/index.ts` to wire
       `FakePaymentGateway` (reads `FAIL_ABOVE_AMOUNT` from env, defaults to `Infinity`)
       and `ProcessOrderHandler`; pass both to `OrderAppService`
-- [ ] 8.3 Verify composition root test passes (green)
+- [x] 8.3 Verify composition root test passes (green)
 
 ## 9. Domain commit
 
-- [ ] 9.1 Run `pnpm run lint` and `pnpm dlx prettier --write .` — fix all violations
-- [ ] 9.2 Commit: `feat(domain): state machine transitions — startProcessing, complete, fail`
-- [ ] 9.3 Commit: `feat(application): composeOrders extended with ProcessOrderHandler + FakePaymentGateway`
+- [x] 9.1 Run `pnpm run lint` and `pnpm dlx prettier --write .` — fix all violations
+- [x] 9.2 Commit: `feat(domain): state machine transitions — startProcessing, complete, fail`
+- [x] 9.3 Commit: `feat(application): composeOrders extended with ProcessOrderHandler + FakePaymentGateway`
 
 ## 10. apps/orders-api — POST /orders/:id/process route (TDD)
 

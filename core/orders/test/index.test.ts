@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { OrderNotFoundError } from '@tcs-challenge-for-backend/kernel';
 import { composeOrders } from '../src/index';
 import { OrderAppService } from '../src/application/order-app-service';
 
@@ -14,6 +15,15 @@ describe('composeOrders', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(typeof result.value).toBe('string');
+    }
+  });
+
+  it('processOrder returns err(OrderNotFoundError) for unknown id', async () => {
+    const svc = composeOrders({});
+    const result = await svc.processOrder('nonexistent');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(OrderNotFoundError);
     }
   });
 
