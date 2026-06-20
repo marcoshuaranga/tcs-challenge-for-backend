@@ -23,14 +23,22 @@ export function startSqsConsumer(
         }),
       );
       for (const msg of result.Messages ?? []) {
-        const { orderId } = JSON.parse(msg.Body!) as { orderId: string };
-        await appService.processOrder(orderId);
-        await client.send(
-          new DeleteMessageCommand({
-            QueueUrl: queueUrl,
-            ReceiptHandle: msg.ReceiptHandle!,
-          }),
-        );
+        try {
+          const { orderId } = JSON.parse(msg.Body!) as { orderId: string };
+          const processed = await appService.processOrder(orderId);
+          if (!processed.ok) {
+            console.error('[sqs-consumer] processOrder failed, leaving in queue:', processed.error);
+            continue;
+          }
+          await client.send(
+            new DeleteMessageCommand({
+              QueueUrl: queueUrl,
+              ReceiptHandle: msg.ReceiptHandle!,
+            }),
+          );
+        } catch (err) {
+          console.error('[sqs-consumer] message error, leaving in queue:', err);
+        }
       }
     } catch (err) {
       console.error('[sqs-consumer] poll error:', err);

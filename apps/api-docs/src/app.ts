@@ -8,7 +8,7 @@ import {
   OrderResponseSchema,
 } from '@tcs-challenge-for-backend/contracts';
 
-export function buildApp(): Hono {
+export function buildApp(apiUrl = 'http://localhost:3000'): Hono {
   const registry = new OpenAPIRegistry();
 
   registry.register('CreateOrder', CreateOrderSchema);
@@ -163,7 +163,7 @@ export function buildApp(): Hono {
       version: '1.0.0',
       description: 'Async order processing platform — TCS technical challenge.',
     },
-    servers: [{ url: 'http://localhost:3000', description: 'Local dev' }],
+    servers: [{ url: apiUrl.replace(/\/$/, ''), description: 'Orders API' }],
   });
 
   const app = new Hono();

@@ -12,7 +12,8 @@
     "@tcs-challenge-for-backend/orders": "workspace:*"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.149",
+    "@aws-sdk/client-sqs": "^3.1072.0",
+    "@types/aws-lambda": "^8.10.162",
     "tsx": "^4.22.0",
     "vitest": "^4.1.9"
   }

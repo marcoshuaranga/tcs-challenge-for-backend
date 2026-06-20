@@ -8,20 +8,21 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "cdk": "cdk",
-    "synth": "cdk synth",
-    "deploy": "cdk deploy",
-    "destroy": "cdk destroy"
+    "synth": "cdk synth --profile maracudev-sandbox",
+    "deploy": "cdk deploy --profile maracudev-sandbox --require-approval never",
+    "destroy": "cdk destroy --profile maracudev-sandbox"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
-    "vitest": "^4.1.9",
     "aws-cdk": "2.1128.0",
     "ts-node": "^10.9.2",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.9"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.260.0",
     "constructs": "^10.6.0",
+    "dotenv": "^17.4.2",
     "esbuild": "^0.25.0"
   }
 }

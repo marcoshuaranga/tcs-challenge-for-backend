@@ -29,7 +29,7 @@
 
 ## 4. Smoke test
 
-- [ ] 4.1 Run `docker compose up --build` and verify all services start without errors
-- [ ] 4.2 POST an order to `http://localhost:3000/orders` and verify it transitions to
+- [x] 4.1 Run `docker compose up --build` and verify all services start without errors
+- [x] 4.2 POST an order to `http://localhost:3000/orders` and verify it transitions to
   COMPLETED (or FAILED for amount > 10000) by polling `GET /orders/:id`
-- [ ] 4.3 Commit: `chore(docker): add local compose stack with Floci (DynamoDB + SQS emulation)`
+- [x] 4.3 Commit: `chore(docker): add local compose stack with Floci (DynamoDB + SQS emulation)`

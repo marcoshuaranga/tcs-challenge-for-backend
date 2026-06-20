@@ -118,6 +118,9 @@ export class TcsChallengeStack extends cdk.Stack {
     const apiDocsLambda = new lambdaNodejs.NodejsFunction(this, 'ApiDocsLambda', {
       entry: path.join(__dirname, '../../api-docs/src/lambda.ts'),
       logGroup: apiDocsLogGroup,
+      environment: {
+        API_URL: httpApi.url ?? '',
+      },
     });
 
     const apiDocsHttpApi = new apigwv2.HttpApi(this, 'ApiDocsHttpApi');
@@ -139,13 +142,42 @@ export class TcsChallengeStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
+    // Rewrite /foo and /foo/ to /foo/index.html so Astro's directory-based
+    // output works correctly. CloudFront's defaultRootObject only handles /.
+    const urlRewriteFn = new cloudfront.Function(this, 'UrlRewriteFn', {
+      code: cloudfront.FunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  var uri = request.uri;
+  if (uri.endsWith('/')) {
+    request.uri = uri + 'index.html';
+  } else if (!uri.includes('.')) {
+    request.uri = uri + '/index.html';
+  }
+  return request;
+}
+      `),
+      runtime: cloudfront.FunctionRuntime.JS_2_0,
+    });
+
     const webDistribution = new cloudfront.Distribution(this, 'WebDistribution', {
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(webBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        functionAssociations: [
+          {
+            function: urlRewriteFn,
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
       },
       defaultRootObject: 'index.html',
       errorResponses: [
+        {
+          httpStatus: 403,
+          responsePagePath: '/index.html',
+          responseHttpStatus: 200,
+        },
         {
           httpStatus: 404,
           responsePagePath: '/index.html',

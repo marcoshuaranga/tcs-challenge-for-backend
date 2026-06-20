@@ -31,7 +31,10 @@ export type Env = {
   QUEUE_URL?: string;
 };
 
-export function composeOrders(env: Env): OrderAppService {
+export function composeOrders(
+  env: Env,
+  adapters?: { publisher?: MessagePublisherPort },
+): OrderAppService {
   const failAboveAmount =
     env.FAIL_ABOVE_AMOUNT !== undefined ? Number(env.FAIL_ABOVE_AMOUNT) : Infinity;
 
@@ -58,7 +61,7 @@ export function composeOrders(env: Env): OrderAppService {
   if (useSqs) {
     publisher = new SqsMessagePublisher(new SQSClient({ region: env.AWS_REGION! }), env.QUEUE_URL!);
   } else {
-    publisher = new InMemoryMessagePublisher();
+    publisher = adapters?.publisher ?? new InMemoryMessagePublisher();
   }
 
   const clock = new SystemClock();
