@@ -87,5 +87,5 @@
 
 - [x] 8.1 Run `pnpm run typecheck` across workspace — zero TypeScript errors
 - [x] 8.2 Run `pnpm run test` across workspace — all tests green
-- [ ] 8.3 Run `/code-review` on the full change
+- [x] 8.3 Run `/code-review` on the full change
 - [ ] 8.4 Archive this change with `/opsx:archive`
